@@ -18,12 +18,12 @@ import {
   CTableRow,
   CTableHeaderCell,
   CTableBody,
-  CTableDataCell,
+  CTableDataCell, CModal , CModalBody , CModalFooter , CModalHeader , CModalTitle
 } from '@coreui/react';
 
 const MyCommunity = () => {
   const [activeTab, setActiveTab] = useState(0);
-
+  const [visible, setVisible] = useState(false)
   return (
     <div className="p-4">
       <CNav variant="tabs">
@@ -56,13 +56,34 @@ const MyCommunity = () => {
 
       <CTabContent>
         <CTabPane visible={activeTab === 0}>
+    <>
+      <CModal
+        alignment="center"
+        visible={visible}
+        onClose={() => setVisible(false)}
+        aria-labelledby="VerticallyCenteredExample"
+      >
+        <CModalHeader>
+          <CModalTitle id="VerticallyCenteredExample">Ingresa la nueva mision,</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+        <CFormInput type="text" placeholder="Descripcion" />
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setVisible(false)}>
+            cerrar
+          </CButton>
+          <CButton color="primary">Guardar cambios</CButton>
+        </CModalFooter>
+      </CModal>
+    </>
           <CRow className="mt-4 justify-content-center">
             <CCol md={5}>
               <CCard>
                 <CCardBody>
                   <h5>Misión</h5>
                   <p>Descripción de la misión aquí.</p>
-                  <CButton color="primary">Modificar</CButton>
+                  <CButton color="primary" onClick={() => setVisible(!visible)}>Modificar</CButton>
                 </CCardBody>
               </CCard>
             </CCol>

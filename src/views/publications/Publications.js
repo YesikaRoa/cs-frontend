@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+
 import {
   CButton,
   CCard,
@@ -15,15 +16,87 @@ import {
   CTableHeaderCell,
   CTableBody,
   CTableDataCell,
+  CModal, 
+  CModalBody, 
+  CModalHeader, 
+  CModalTitle,
+  CModalFooter, 
+  CFormTextarea,
 } from '@coreui/react';
 
 const Publications = () => {
+  const [visible, setVisible] = useState(false)
   console.log('Publications component rendered');
   return (
     <div className="p-4">
+      <CModal
+        size="xl"
+        visible={visible}
+        onClose={() => setVisible(false)}
+        aria-labelledby="OptionalSizesExample1"
+      >
+        <CModalHeader>
+          <CModalTitle id="OptionalSizesExample1">Extra large modal</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+    <CRow>
+      <CCol md={6}>
+        <CCard>
+          <CCardBody>
+            <h3>Subir Imagen</h3>
+            <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
+            <CFormInput type="file" id="imageUpload" accept="image/*" />
+          </CCardBody>
+        </CCard>
+      </CCol>
+
+      <CCol md={6}>
+        <CCard>
+          <CCardBody>
+            <h3>Formulario</h3>
+            <CForm>
+              <div className="mb-3">
+                <CFormLabel htmlFor="title">Título</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="title"
+                  placeholder="Ingrese el título"
+                />
+              </div>
+
+              <div className="mb-3">
+                <CFormLabel htmlFor="description">Descripción</CFormLabel>
+                <CFormTextarea
+                  id="description"
+                  rows="4"
+                  placeholder="Ingrese una descripción"
+                />
+              </div>
+
+              <div className="mb-3">
+                <CFormLabel htmlFor="tags">Etiquetas</CFormLabel>
+                <CFormSelect id="tags" multiple>
+                  <option value="Etiqueta1">Etiqueta 1</option>
+                  <option value="Etiqueta2">Etiqueta 2</option>
+                  <option value="Etiqueta3">Etiqueta 3</option>
+                </CFormSelect>
+              </div>
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+        </CModalBody>
+        <CModalFooter>
+                  <CButton color="secondary" onClick={() => setVisible(false)}>
+                    cerrar
+                  </CButton>
+                  <CButton color="primary">Guardar cambios</CButton>
+                </CModalFooter>
+      </CModal>
       <CRow>
         <CCol className="text-end">
-          <CButton color="primary" className="mb-3">
+          <CButton color="primary" className="mb-3" onClick={() => setVisible(!visible)}>
             Nueva Publicación
           </CButton>
         </CCol>
