@@ -1,50 +1,83 @@
-import React from 'react'
-import { CCard, CCardHeader, CCardBody, CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell } from '@coreui/react'
-import { DocsLink } from 'src/components'
+import React, { useState } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CButton,
+} from '@coreui/react'
+import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
+import { CIcon } from '@coreui/icons-react'
 
 const Users = () => {
-
-    console.log('Users component rendered')
-
-
-
-
-
-
-
+  const [users] = useState([
+    {
+      id: 1,
+      nombre: 'Diego',
+      apellido: 'Altamiranda',
+      telefono: '04247028764',
+      email: 'diegoaltamiranda22@gmail.com',
+      comunidad: 'Lote H Rio Zuniga',
+      rol: 'Lider de calle',
+    },
+  ])
 
   return (
-    <>
-      <CTable>
-  <CTableHead>
-    <CTableRow>
-      <CTableHeaderCell scope="col">#</CTableHeaderCell>
-      <CTableHeaderCell scope="col">Class</CTableHeaderCell>
-      <CTableHeaderCell scope="col">Heading</CTableHeaderCell>
-      <CTableHeaderCell scope="col">Heading</CTableHeaderCell>
-    </CTableRow>
-  </CTableHead>
-  <CTableBody>
-    <CTableRow>
-      <CTableHeaderCell scope="row">1</CTableHeaderCell>
-      <CTableDataCell>Mark</CTableDataCell>
-      <CTableDataCell>Otto</CTableDataCell>
-      <CTableDataCell>@mdo</CTableDataCell>
-    </CTableRow>
-    <CTableRow>
-      <CTableHeaderCell scope="row">2</CTableHeaderCell>
-      <CTableDataCell>Jacob</CTableDataCell>
-      <CTableDataCell>Thornton</CTableDataCell>
-      <CTableDataCell>@fat</CTableDataCell>
-    </CTableRow>
-    <CTableRow>
-      <CTableHeaderCell scope="row">3</CTableHeaderCell>
-      <CTableDataCell colSpan={2}>Larry the Bird</CTableDataCell>
-      <CTableDataCell>@twitter</CTableDataCell>
-    </CTableRow>
-  </CTableBody>
-</CTable>
-    </>
+    <div className="p-3">
+      <div className="d-flex justify-content-end mb-3">
+        <CButton color="primary">
+          <CIcon icon={cilUserPlus} /> Añadir usuario
+        </CButton>
+      </div>
+      <CCard>
+        <CCardBody>
+          <CTable striped hover responsive>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>Id</CTableHeaderCell>
+                <CTableHeaderCell>Nombre</CTableHeaderCell>
+                <CTableHeaderCell>Apellido</CTableHeaderCell>
+                <CTableHeaderCell>Teléfono</CTableHeaderCell>
+                <CTableHeaderCell>Email</CTableHeaderCell>
+                <CTableHeaderCell>Comunidad</CTableHeaderCell>
+                <CTableHeaderCell>Rol</CTableHeaderCell>
+                <CTableHeaderCell>Acciones</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {users.map((user) => (
+                <CTableRow key={user.id}>
+                  <CTableDataCell>{user.id}</CTableDataCell>
+                  <CTableDataCell>{user.nombre}</CTableDataCell>
+                  <CTableDataCell>{user.apellido}</CTableDataCell>
+                  <CTableDataCell>{user.telefono}</CTableDataCell>
+                  <CTableDataCell>{user.email}</CTableDataCell>
+                  <CTableDataCell>{user.comunidad}</CTableDataCell>
+                  <CTableDataCell>{user.rol}</CTableDataCell>
+                  <CTableDataCell>
+                    <div className="d-flex">
+                      <CButton color="primary" size="sm" className="me-2">
+                        <CIcon icon={cilPencil} className="text-white" />
+                      </CButton>
+                      <CButton color="danger" size="sm" className="me-2">
+                        <CIcon icon={cilTrash} className="text-white" />
+                      </CButton>
+                      <CButton color="info" size="sm">
+                        <CIcon icon={cilInfo} className="text-white"/>
+                      </CButton>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+        </CCardBody>
+      </CCard>
+    </div>
   )
 }
 

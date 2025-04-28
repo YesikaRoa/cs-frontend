@@ -1,84 +1,130 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   CButton,
   CCard,
   CCardBody,
-  CCardGroup,
   CCol,
   CContainer,
   CForm,
   CFormInput,
   CInputGroup,
   CInputGroupText,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
   CRow,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser } from '@coreui/icons'
+import { cilLockLocked, cilUser, cilEnvelopeClosed } from '@coreui/icons'
+
+const defaultUser = {
+  nombre: 'Diego Altamiranda',
+  email: 'diegoaltamiranda22@gmail.com',
+  contraseña: '1234',
+}
 
 const Login = () => {
+  const [email, setEmail] = useState('')
+  const [contraseña, setContraseña] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [emailRecuperacion, setEmailRecuperacion] = useState('')
+  const navigate = useNavigate()
+
+  const handleLogin = () => {
+    if (email === defaultUser.email && contraseña === defaultUser.contraseña) {
+      localStorage.setItem('userToken', 'tokenEjemplo')
+      navigate('/dashboard')
+    } else {
+      alert('Correo o contraseña incorrecta. Intente nuevamente.')
+    }
+  }
+
+  const handleRecuperarContraseña = () => {
+    alert(`Se ha enviado un enlace de recuperación a: ${emailRecuperacion}`)
+    setShowModal(false)
+  }
+
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
-        <CRow className="justify-content-center">
-          <CCol md={8}>
-            <CCardGroup>
-              <CCard className="p-4">
-                <CCardBody>
-                  <CForm>
-                    <h1>Login</h1>
-                    <p className="text-body-secondary">Sign In to your account</p>
-                    <CInputGroup className="mb-3">
-                      <CInputGroupText>
-                        <CIcon icon={cilUser} />
-                      </CInputGroupText>
-                      <CFormInput placeholder="Username" autoComplete="username" />
-                    </CInputGroup>
-                    <CInputGroup className="mb-4">
-                      <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
-                      </CInputGroupText>
-                      <CFormInput
-                        type="password"
-                        placeholder="Password"
-                        autoComplete="current-password"
-                      />
-                    </CInputGroup>
-                    <CRow>
-                      <CCol xs={6}>
-                        <CButton color="primary" className="px-4">
-                          Login
-                        </CButton>
-                      </CCol>
-                      <CCol xs={6} className="text-right">
-                        <CButton color="link" className="px-0">
-                          Forgot password?
-                        </CButton>
-                      </CCol>
-                    </CRow>
-                  </CForm>
-                </CCardBody>
-              </CCard>
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
-                <CCardBody className="text-center">
-                  <div>
-                    <h2>Sign up</h2>
-                    <p>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-                      tempor incididunt ut labore et dolore magna aliqua.
-                    </p>
-                    <Link to="/register">
-                      <CButton color="primary" className="mt-3" active tabIndex={-1}>
-                        Register Now!
+        <CRow className="justify-content-center align-items-center min-vh-100">
+          <CCol md={6}>
+            <CCard className="p-4">
+              <CCardBody>
+                <CForm>
+                  <h1>Iniciar Sesión</h1>
+                  <p className="text-body-secondary">Accede a tu cuenta</p>
+
+                  <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilUser} />
+                    </CInputGroupText>
+                    <CFormInput
+                      placeholder="Email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </CInputGroup>
+
+                  <CInputGroup className="mb-4">
+                    <CInputGroupText>
+                      <CIcon icon={cilLockLocked} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="password"
+                      placeholder="Contraseña"
+                      autoComplete="current-password"
+                      value={contraseña}
+                      onChange={(e) => setContraseña(e.target.value)}
+                    />
+                  </CInputGroup>
+
+                  <CRow>
+                    <CCol xs={6}>
+                      <CButton color="primary" className="px-4" onClick={handleLogin}>
+                        Iniciar Sesión
                       </CButton>
-                    </Link>
-                  </div>
-                </CCardBody>
-              </CCard>
-            </CCardGroup>
+                    </CCol>
+                    <CCol xs={6} className="text-right">
+                      <CButton color="link" className="px-0" onClick={() => setShowModal(true)}>
+                        Recuperar Contraseña
+                      </CButton>
+                    </CCol>
+                  </CRow>
+                </CForm>
+              </CCardBody>
+            </CCard>
           </CCol>
         </CRow>
       </CContainer>
+
+      <CModal visible={showModal} onClose={() => setShowModal(false)} alignment="center">
+        <CModalHeader>Recuperar Contraseña</CModalHeader>
+        <CModalBody>
+        <p className="text-body-secondary">Te enviaremos un correo con tu nueva contraseña para que puedas acceder de nuevo al sistema</p>
+          <CInputGroup className="mb-3">
+            <CInputGroupText>
+              <CIcon icon={cilEnvelopeClosed} />
+            </CInputGroupText>
+            <CFormInput
+              placeholder="Ingrese su email"
+              value={emailRecuperacion}
+              onChange={(e) => setEmailRecuperacion(e.target.value)}
+            />
+          </CInputGroup>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShowModal(false)}>
+            Cancelar
+          </CButton>
+          <CButton color="primary" onClick={handleRecuperarContraseña}>
+            Enviar
+          </CButton>
+        </CModalFooter>
+      </CModal>
     </div>
   )
 }
