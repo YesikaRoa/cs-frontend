@@ -14,15 +14,18 @@ import {
 
 const Profile = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
-  const userInfo = {
+  const [userInfo, setUserInfo] = useState({
     nombre: 'Diego Altamiranda',
     telefono: '04247028764',
     email: 'diegoaltamiranda22@gmail.com',
     direccion: 'Calle 1, Lote H',
     comunidad: 'Lote H Rio Zuniga',
     rol: 'Lider de calle',
-  }
+  })
+
+  const [editInfo, setEditInfo] = useState({ ...userInfo })
 
   const [password, setPassword] = useState({ current: '', new: '', confirm: '' })
 
@@ -32,6 +35,11 @@ const Profile = () => {
     console.log('Confirmar contraseña:', password.confirm)
     setPassword({ current: '', new: '', confirm: '' })
     setShowPasswordModal(false)
+  }
+
+  const handleEditInfo = () => {
+    setUserInfo(editInfo)
+    setShowEditModal(false)
   }
 
   return (
@@ -60,8 +68,10 @@ const Profile = () => {
             <strong>Rol:</strong> {userInfo.rol}
           </div>
           <div className="d-flex justify-content-between">
-            <CButton color="primary">Editar Información</CButton>
-            <CButton color="info" className= 'text-white' onClick={() => setShowPasswordModal(true)}>
+            <CButton color="primary" onClick={() => setShowEditModal(true)}>
+              Editar Información
+            </CButton>
+            <CButton color="info" className="text-white" onClick={() => setShowPasswordModal(true)}>
               Cambiar Contraseña
             </CButton>
           </div>
@@ -100,6 +110,58 @@ const Profile = () => {
             Guardar
           </CButton>
           <CButton color="secondary" onClick={() => setShowPasswordModal(false)}>
+            Cancelar
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={showEditModal} onClose={() => setShowEditModal(false)}>
+        <CModalHeader>Editar Información Personal</CModalHeader>
+        <CModalBody>
+          <CForm>
+            <CFormInput
+              label="Nombre"
+              value={editInfo.nombre}
+              onChange={(e) => setEditInfo({ ...editInfo, nombre: e.target.value })}
+              className="mb-2"
+            />
+            <CFormInput
+              label="Teléfono"
+              value={editInfo.telefono}
+              onChange={(e) => setEditInfo({ ...editInfo, telefono: e.target.value })}
+              className="mb-2"
+            />
+            <CFormInput
+              label="Email"
+              value={editInfo.email}
+              onChange={(e) => setEditInfo({ ...editInfo, email: e.target.value })}
+              className="mb-2"
+            />
+            <CFormInput
+              label="Dirección"
+              value={editInfo.direccion}
+              onChange={(e) => setEditInfo({ ...editInfo, direccion: e.target.value })}
+              className="mb-2"
+            />
+            <CFormInput
+              label="Comunidad"
+              value={editInfo.comunidad}
+              onChange={(e) => setEditInfo({ ...editInfo, comunidad: e.target.value })}
+              className="mb-2"
+            />
+            <CFormInput
+              label="Rol"
+              value={editInfo.rol}
+              onChange={(e) => setEditInfo({ ...editInfo, rol: e.target.value })}
+              className="mb-2"
+            />
+          </CForm>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="primary" onClick={handleEditInfo}>
+            Guardar Cambios
+          </CButton>
+          <CButton color="secondary" onClick={() => setShowEditModal(false)}>
             Cancelar
           </CButton>
         </CModalFooter>
