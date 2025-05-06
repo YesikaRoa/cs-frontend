@@ -106,7 +106,7 @@ const Profile = () => {
           </CForm>
         </CModalBody>
         <CModalFooter>
-          <CButton color="success" onClick={handleChangePassword}>
+          <CButton color="primary" onClick={handleChangePassword}>
             Guardar
           </CButton>
           <CButton color="secondary" onClick={() => setShowPasswordModal(false)}>
@@ -159,7 +159,7 @@ const Profile = () => {
         </CModalBody>
         <CModalFooter>
           <CButton color="primary" onClick={handleEditInfo}>
-            Guardar Cambios
+            Guardar 
           </CButton>
           <CButton color="secondary" onClick={() => setShowEditModal(false)}>
             Cancelar

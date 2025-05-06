@@ -117,11 +117,11 @@ const Login = () => {
           </CInputGroup>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setShowModal(false)}>
-            Cancelar
-          </CButton>
           <CButton color="primary" onClick={handleRecuperarContraseña}>
             Enviar
+          </CButton>
+          <CButton color="secondary" onClick={() => setShowModal(false)}>
+            Cancelar
           </CButton>
         </CModalFooter>
       </CModal>

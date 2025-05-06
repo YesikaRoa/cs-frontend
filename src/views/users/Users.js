@@ -38,6 +38,8 @@ const Users = () => {
   const [viewModal, setViewModal] = useState(false)
   const [addModal, setAddModal] = useState(false)
   const [editModal, setEditModal] = useState(false)
+  const [deleteModal, setDeleteModal] = useState(false)
+  const [userToDelete, setUserToDelete] = useState(null)
   const [userToEdit, setUserToEdit] = useState(null)
 
   const comunidades = [
@@ -89,10 +91,15 @@ const Users = () => {
   }
 
   const handleDelete = (id) => {
-    const confirm = window.confirm('¿Estás seguro de que deseas eliminar este usuario?')
-    if (confirm) {
-      setUsers(users.filter((user) => user.id !== id))
-    }
+    const user = users.find((u) => u.id === id)
+    setUserToDelete(user)
+    setDeleteModal(true)
+  }
+
+  const confirmDelete = () => {
+    setUsers(users.filter((user) => user.id !== userToDelete.id))
+    setDeleteModal(false)
+    setUserToDelete(null)
   }
 
   const handleView = (user) => {
@@ -203,8 +210,8 @@ const Users = () => {
           </CForm>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setAddModal(false)}>Cancelar</CButton>
           <CButton color="primary" onClick={handleAddUser}>Guardar</CButton>
+          <CButton color="secondary" onClick={() => setAddModal(false)}>Cancelar</CButton>
         </CModalFooter>
       </CModal>
 
@@ -235,7 +242,6 @@ const Users = () => {
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setEditModal(false)}>Cancelar</CButton>
           <CButton
             color="primary"
             onClick={() => {
@@ -254,8 +260,27 @@ const Users = () => {
               }
             }}
           >
-            Guardar cambios
+            Guardar
           </CButton>
+          <CButton color="secondary" onClick={() => setEditModal(false)}>Cancelar</CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={deleteModal} onClose={() => setDeleteModal(false)}>
+        <CModalHeader onClose={() => setDeleteModal(false)}>
+          <CModalTitle>Confirmar eliminación</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {userToDelete && (
+            <p>
+              ¿Estás seguro de que deseas eliminar al usuario{' '}
+              <strong>{userToDelete.nombre} {userToDelete.apellido}</strong>?
+            </p>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="danger" onClick={confirmDelete}>Eliminar</CButton>
+          <CButton color="secondary" onClick={() => setDeleteModal(false)}>Cancelar</CButton>
         </CModalFooter>
       </CModal>
     </div>
