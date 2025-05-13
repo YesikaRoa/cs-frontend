@@ -116,7 +116,7 @@ const Users = () => {
     <div className="p-3">
       <div className="d-flex justify-content-end mb-3">
         <CButton color="primary" onClick={() => setAddModal(true)}>
-          <CIcon icon={cilUserPlus} /> Añadir usuario
+          <CIcon icon={cilUserPlus} /> Crear usuario
         </CButton>
       </div>
       <CCard>
@@ -146,10 +146,20 @@ const Users = () => {
                   <CTableDataCell>{user.rol}</CTableDataCell>
                   <CTableDataCell>
                     <div className="d-flex">
-                      <CButton color="primary" size="sm" className="me-2" onClick={() => handleEdit(user)}>
+                      <CButton
+                        color="primary"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => handleEdit(user)}
+                      >
                         <CIcon icon={cilPencil} className="text-white" />
                       </CButton>
-                      <CButton color="danger" size="sm" className="me-2" onClick={() => handleDelete(user.id)}>
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => handleDelete(user.id)}
+                      >
                         <CIcon icon={cilTrash} className="text-white" />
                       </CButton>
                       <CButton color="info" size="sm" onClick={() => handleView(user)}>
@@ -171,17 +181,31 @@ const Users = () => {
         <CModalBody>
           {selectedUser && (
             <ul>
-              <li><strong>Nombre:</strong> {selectedUser.nombre}</li>
-              <li><strong>Apellido:</strong> {selectedUser.apellido}</li>
-              <li><strong>Teléfono:</strong> {selectedUser.telefono}</li>
-              <li><strong>Email:</strong> {selectedUser.email}</li>
-              <li><strong>Comunidad:</strong> {selectedUser.comunidad}</li>
-              <li><strong>Rol:</strong> {selectedUser.rol}</li>
+              <li>
+                <strong>Nombre:</strong> {selectedUser.nombre}
+              </li>
+              <li>
+                <strong>Apellido:</strong> {selectedUser.apellido}
+              </li>
+              <li>
+                <strong>Teléfono:</strong> {selectedUser.telefono}
+              </li>
+              <li>
+                <strong>Email:</strong> {selectedUser.email}
+              </li>
+              <li>
+                <strong>Comunidad:</strong> {selectedUser.comunidad}
+              </li>
+              <li>
+                <strong>Rol:</strong> {selectedUser.rol}
+              </li>
             </ul>
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setViewModal(false)}>Cerrar</CButton>
+          <CButton color="secondary" onClick={() => setViewModal(false)}>
+            Cerrar
+          </CButton>
         </CModalFooter>
       </CModal>
 
@@ -191,27 +215,71 @@ const Users = () => {
         </CModalHeader>
         <CModalBody>
           <CForm>
-            <CFormInput label="Nombre" name="nombre" value={newUser.nombre} onChange={handleInputChange} className="mb-2" />
-            <CFormInput label="Apellido" name="apellido" value={newUser.apellido} onChange={handleInputChange} className="mb-2" />
-            <CFormInput label="Teléfono" name="telefono" value={newUser.telefono} onChange={handleInputChange} className="mb-2" />
-            <CFormInput label="Email" name="email" value={newUser.email} onChange={handleInputChange} className="mb-2" />
-            <CFormSelect label="Comunidad" name="comunidad" value={newUser.comunidad} onChange={handleInputChange} className="mb-2">
+            <CFormInput
+              label="Nombre"
+              name="nombre"
+              value={newUser.nombre}
+              onChange={handleInputChange}
+              className="mb-2"
+            />
+            <CFormInput
+              label="Apellido"
+              name="apellido"
+              value={newUser.apellido}
+              onChange={handleInputChange}
+              className="mb-2"
+            />
+            <CFormInput
+              label="Teléfono"
+              name="telefono"
+              value={newUser.telefono}
+              onChange={handleInputChange}
+              className="mb-2"
+            />
+            <CFormInput
+              label="Email"
+              name="email"
+              value={newUser.email}
+              onChange={handleInputChange}
+              className="mb-2"
+            />
+            <CFormSelect
+              label="Comunidad"
+              name="comunidad"
+              value={newUser.comunidad}
+              onChange={handleInputChange}
+              className="mb-2"
+            >
               <option value="">Seleccione una comunidad</option>
               {comunidades.map((comunidad, index) => (
-                <option key={index} value={comunidad}>{comunidad}</option>
+                <option key={index} value={comunidad}>
+                  {comunidad}
+                </option>
               ))}
             </CFormSelect>
-            <CFormSelect label="Rol" name="rol" value={newUser.rol} onChange={handleInputChange} className="mb-2">
+            <CFormSelect
+              label="Rol"
+              name="rol"
+              value={newUser.rol}
+              onChange={handleInputChange}
+              className="mb-2"
+            >
               <option value="">Indique el rol que va a desempeñar</option>
               {roles.map((rol, index) => (
-                <option key={index} value={rol}>{rol}</option>
+                <option key={index} value={rol}>
+                  {rol}
+                </option>
               ))}
             </CFormSelect>
           </CForm>
         </CModalBody>
         <CModalFooter>
-          <CButton color="primary" onClick={handleAddUser}>Guardar</CButton>
-          <CButton color="secondary" onClick={() => setAddModal(false)}>Cancelar</CButton>
+          <CButton color="primary" onClick={handleAddUser}>
+            Guardar
+          </CButton>
+          <CButton color="secondary" onClick={() => setAddModal(false)}>
+            Cancelar
+          </CButton>
         </CModalFooter>
       </CModal>
 
@@ -222,20 +290,54 @@ const Users = () => {
         <CModalBody>
           {userToEdit && (
             <CForm>
-              <CFormInput label="Nombre" value={userToEdit.nombre} onChange={(e) => setUserToEdit({ ...userToEdit, nombre: e.target.value })} className="mb-2" />
-              <CFormInput label="Apellido" value={userToEdit.apellido} onChange={(e) => setUserToEdit({ ...userToEdit, apellido: e.target.value })} className="mb-2" />
-              <CFormInput label="Teléfono" value={userToEdit.telefono} onChange={(e) => setUserToEdit({ ...userToEdit, telefono: e.target.value })} className="mb-2" />
-              <CFormInput label="Email" value={userToEdit.email} onChange={(e) => setUserToEdit({ ...userToEdit, email: e.target.value })} className="mb-2" />
-              <CFormSelect label="Comunidad" value={userToEdit.comunidad} onChange={(e) => setUserToEdit({ ...userToEdit, comunidad: e.target.value })} className="mb-2">
+              <CFormInput
+                label="Nombre"
+                value={userToEdit.nombre}
+                onChange={(e) => setUserToEdit({ ...userToEdit, nombre: e.target.value })}
+                className="mb-2"
+              />
+              <CFormInput
+                label="Apellido"
+                value={userToEdit.apellido}
+                onChange={(e) => setUserToEdit({ ...userToEdit, apellido: e.target.value })}
+                className="mb-2"
+              />
+              <CFormInput
+                label="Teléfono"
+                value={userToEdit.telefono}
+                onChange={(e) => setUserToEdit({ ...userToEdit, telefono: e.target.value })}
+                className="mb-2"
+              />
+              <CFormInput
+                label="Email"
+                value={userToEdit.email}
+                onChange={(e) => setUserToEdit({ ...userToEdit, email: e.target.value })}
+                className="mb-2"
+              />
+              <CFormSelect
+                label="Comunidad"
+                value={userToEdit.comunidad}
+                onChange={(e) => setUserToEdit({ ...userToEdit, comunidad: e.target.value })}
+                className="mb-2"
+              >
                 <option value="">Seleccione una comunidad</option>
                 {comunidades.map((comunidad, index) => (
-                  <option key={index} value={comunidad}>{comunidad}</option>
+                  <option key={index} value={comunidad}>
+                    {comunidad}
+                  </option>
                 ))}
               </CFormSelect>
-              <CFormSelect label="Rol" value={userToEdit.rol} onChange={(e) => setUserToEdit({ ...userToEdit, rol: e.target.value })} className="mb-2">
+              <CFormSelect
+                label="Rol"
+                value={userToEdit.rol}
+                onChange={(e) => setUserToEdit({ ...userToEdit, rol: e.target.value })}
+                className="mb-2"
+              >
                 <option value="">Indique el rol que va a desempeñar</option>
                 {roles.map((rol, index) => (
-                  <option key={index} value={rol}>{rol}</option>
+                  <option key={index} value={rol}>
+                    {rol}
+                  </option>
                 ))}
               </CFormSelect>
             </CForm>
@@ -262,7 +364,9 @@ const Users = () => {
           >
             Guardar
           </CButton>
-          <CButton color="secondary" onClick={() => setEditModal(false)}>Cancelar</CButton>
+          <CButton color="secondary" onClick={() => setEditModal(false)}>
+            Cancelar
+          </CButton>
         </CModalFooter>
       </CModal>
 
@@ -274,13 +378,20 @@ const Users = () => {
           {userToDelete && (
             <p>
               ¿Estás seguro de que deseas eliminar al usuario{' '}
-              <strong>{userToDelete.nombre} {userToDelete.apellido}</strong>?
+              <strong>
+                {userToDelete.nombre} {userToDelete.apellido}
+              </strong>
+              ?
             </p>
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton color="danger" onClick={confirmDelete}>Eliminar</CButton>
-          <CButton color="secondary" onClick={() => setDeleteModal(false)}>Cancelar</CButton>
+          <CButton color="danger" onClick={confirmDelete}>
+            Eliminar
+          </CButton>
+          <CButton color="secondary" onClick={() => setDeleteModal(false)}>
+            Cancelar
+          </CButton>
         </CModalFooter>
       </CModal>
     </div>

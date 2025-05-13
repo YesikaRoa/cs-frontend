@@ -1,24 +1,13 @@
-import React from 'react'
 import CIcon from '@coreui/icons-react'
-import { cilNotes, cilPeople, cilHome, cilLocationPin, cilChart } from '@coreui/icons'
-import { CNavItem, CNavTitle } from '@coreui/react'
+import { cilNotes, cilPeople, cilUser, cilLocationPin, cilChart } from '@coreui/icons'
+import { CNavItem } from '@coreui/react'
 
 const _nav = [
-  {
-    component: CNavTitle,
-    name: 'Apartados',
-  },
   {
     component: CNavItem,
     name: 'Dashboard',
     to: '/dashboard',
     icon: <CIcon icon={cilChart} customClassName="nav-icon" />,
-  },
-  {
-    component: CNavItem,
-    name: 'Perfil',
-    to: '/profile',
-    icon: <CIcon icon={cilHome} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
@@ -28,7 +17,7 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Publicaciones', //Aqui cualquier cosa "corre"
+    name: 'Publicaciones',
     icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
     to: '/posts',
   },
@@ -37,6 +26,12 @@ const _nav = [
     name: 'Mi comunidad',
     to: '/charts',
     icon: <CIcon icon={cilLocationPin} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Perfil',
+    to: '/profile',
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
   },
 ]
 export default _nav

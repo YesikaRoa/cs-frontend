@@ -22,18 +22,18 @@ import { cilLockLocked, cilUser, cilEnvelopeClosed } from '@coreui/icons'
 const defaultUser = {
   nombre: 'Diego Altamiranda',
   email: 'diegoaltamiranda22@gmail.com',
-  contraseña: '1234',
+  password: '1234',
 }
 
 const Login = () => {
   const [email, setEmail] = useState('')
-  const [contraseña, setContraseña] = useState('')
+  const [password, setContraseña] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const [emailRecuperacion, setEmailRecuperacion] = useState('')
+  const [recoverEmail, setEmailRecuperacion] = useState('')
   const navigate = useNavigate()
 
   const handleLogin = () => {
-    if (email === defaultUser.email && contraseña === defaultUser.contraseña) {
+    if (email === defaultUser.email && password === defaultUser.password) {
       localStorage.setItem('userToken', 'tokenEjemplo')
       navigate('/dashboard')
     } else {
@@ -41,8 +41,8 @@ const Login = () => {
     }
   }
 
-  const handleRecuperarContraseña = () => {
-    alert(`Se ha enviado un enlace de recuperación a: ${emailRecuperacion}`)
+  const handleRecoverPassword = () => {
+    alert(`Se ha enviado un enlace de recuperación a: ${recoverEmail}`)
     setShowModal(false)
   }
 
@@ -77,7 +77,7 @@ const Login = () => {
                       type="password"
                       placeholder="Contraseña"
                       autoComplete="current-password"
-                      value={contraseña}
+                      value={password}
                       onChange={(e) => setContraseña(e.target.value)}
                     />
                   </CInputGroup>
@@ -104,20 +104,23 @@ const Login = () => {
       <CModal visible={showModal} onClose={() => setShowModal(false)} alignment="center">
         <CModalHeader>Recuperar Contraseña</CModalHeader>
         <CModalBody>
-        <p className="text-body-secondary">Te enviaremos un correo con tu nueva contraseña para que puedas acceder de nuevo al sistema</p>
+          <p className="text-body-secondary">
+            Te enviaremos un correo con tu nueva contraseña para que puedas acceder de nuevo al
+            sistema
+          </p>
           <CInputGroup className="mb-3">
             <CInputGroupText>
               <CIcon icon={cilEnvelopeClosed} />
             </CInputGroupText>
             <CFormInput
               placeholder="Ingrese su email"
-              value={emailRecuperacion}
+              value={recoverEmail}
               onChange={(e) => setEmailRecuperacion(e.target.value)}
             />
           </CInputGroup>
         </CModalBody>
         <CModalFooter>
-          <CButton color="primary" onClick={handleRecuperarContraseña}>
+          <CButton color="primary" onClick={handleRecoverPassword}>
             Enviar
           </CButton>
           <CButton color="secondary" onClick={() => setShowModal(false)}>
