@@ -24,7 +24,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Mi comunidad',
-    to: '/charts',
+    to: '/community',
     icon: <CIcon icon={cilLocationPin} customClassName="nav-icon" />,
   },
   {

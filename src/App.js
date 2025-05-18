@@ -4,14 +4,13 @@ import { useSelector } from 'react-redux'
 
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
-
+import './scss/custom.scss'
 
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 
 const Login = React.lazy(() => import('./views/pages/login/Login'))
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
-
 
 const isAuthenticated = () => localStorage.getItem('userToken') !== null
 
@@ -28,7 +27,7 @@ const App = () => {
     if (!isColorModeSet()) {
       setColorMode(storedTheme)
     }
-  }, []) 
+  }, [])
 
   return (
     <HashRouter>
@@ -44,7 +43,11 @@ const App = () => {
           <Route path="/login" name="Login Page" element={<Login />} />
           <Route path="/404" name="Page 404" element={<Page404 />} />
           <Route path="/500" name="Page 500" element={<Page500 />} />
-          <Route path="*" name="Home" element={isAuthenticated() ? <DefaultLayout /> : <Navigate to="/login" />} />
+          <Route
+            path="*"
+            name="Home"
+            element={isAuthenticated() ? <DefaultLayout /> : <Navigate to="/login" />}
+          />
         </Routes>
       </Suspense>
     </HashRouter>
@@ -52,4 +55,3 @@ const App = () => {
 }
 
 export default App
-

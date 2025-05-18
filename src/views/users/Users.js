@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   CCard,
   CCardBody,
@@ -116,7 +116,7 @@ const Users = () => {
     <div className="p-3">
       <div className="d-flex justify-content-end mb-3">
         <CButton color="primary" onClick={() => setAddModal(true)}>
-          <CIcon icon={cilUserPlus} /> Crear usuario
+          <CIcon icon={cilUserPlus} /> Crear Usuario
         </CButton>
       </div>
       <CCard>
@@ -124,7 +124,6 @@ const Users = () => {
           <CTable striped hover responsive>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell>Id</CTableHeaderCell>
                 <CTableHeaderCell>Nombre</CTableHeaderCell>
                 <CTableHeaderCell>Apellido</CTableHeaderCell>
                 <CTableHeaderCell>Teléfono</CTableHeaderCell>
@@ -137,7 +136,6 @@ const Users = () => {
             <CTableBody>
               {users.map((user) => (
                 <CTableRow key={user.id}>
-                  <CTableDataCell>{user.id}</CTableDataCell>
                   <CTableDataCell>{user.nombre}</CTableDataCell>
                   <CTableDataCell>{user.apellido}</CTableDataCell>
                   <CTableDataCell>{user.telefono}</CTableDataCell>
