@@ -1,144 +1,104 @@
-import React, { useEffect, useRef } from 'react'
+import { useState } from 'react'
 import {
-  CButton,
   CCard,
   CCardBody,
-  CCol,
   CRow,
+  CCol,
   CTable,
-  CTableBody,
-  CTableDataCell,
   CTableHead,
-  CTableHeaderCell,
+  CTableBody,
   CTableRow,
+  CTableHeaderCell,
+  CTableDataCell,
 } from '@coreui/react'
-import Chart from 'chart.js/auto'
+import { CChartDoughnut, CChartBar } from '@coreui/react-chartjs'
 
 const Dashboard = () => {
-  const donutChart1Ref = useRef(null)
-  const donutChart2Ref = useRef(null)
-  const barChartRef = useRef(null)
-  useEffect(() => {
-    new Chart(donutChart1Ref.current, {
-      type: 'doughnut',
-      data: {
-        labels: ['Publicaciones', 'publicaciones2', 'publicaciones3'],
-        datasets: [
-          {
-            data: [300, 50, 100],
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-          },
-        ],
-      },
-    })
-
-    new Chart(donutChart2Ref.current, {
-      type: 'doughnut',
-      data: {
-        labels: ['Categoría X', 'Categoría Y', 'Categoría Z'],
-        datasets: [
-          {
-            data: [150, 250, 200],
-            backgroundColor: ['#4BC0C0', '#FF9F40', '#9966FF'],
-          },
-        ],
-      },
-    })
-
-    new Chart(barChartRef.current, {
-      type: 'bar',
-      data: {
-        labels: ['Enero', 'Febrero', 'Marzo'],
-        datasets: [
-          {
-            label: 'vistas',
-            data: [65, 59, 80],
-            backgroundColor: ['#36A2EB', '#FF6384', '#4BC0C0'],
-          },
-        ],
-      },
-    })
-  }, [])
-
-  const publicaciones = [
+  const [users, setUsers] = useState([
     {
-      fecha: '2025-04-25',
-      descripcion: 'Publicación 1',
-      estado: 'Activo',
-      usuario: 'Usuario 1',
+      id: 1,
+      first_name: 'Diego',
+      last_name: 'Altamiranda',
+      community: 'Lote H Rio Zuniga',
+      rol: 'Lider de calle',
+      last_login: '2025-05-10',
     },
+
     {
-      fecha: '2025-04-26',
-      descripcion: 'Publicación 2',
-      estado: 'Inactivo',
-      usuario: 'Usuario 2',
+      id: 2,
+      first_name: 'Yesika',
+      last_name: 'Roa',
+      community: 'Lote H Rio Zuniga',
+      rol: 'Jefe de comunidad',
+      last_login: '2025-05-10',
     },
-  ]
+  ])
+
+  const postsMonth = [12, 8, 5, 3] // Proyecto, Evento, Noticia, Anuncio
+  const postsYear = [120, 80, 50, 30]
+  const postsPerMonth = [10, 12, 8, 15, 20, 18, 22, 25, 19, 17, 14, 13]
 
   return (
     <div>
-      <CRow>
-        <CCol>
+      <CRow className="component-space">
+        <CCol md={6}>
           <CCard>
             <CCardBody>
-              <h4>Publicaciones</h4>
-              <canvas ref={donutChart1Ref}></canvas>
+              <h5>Publicaciones del mes</h5>
+              <CChartDoughnut
+                data={{
+                  labels: ['Proyecto', 'Evento', 'Noticia', 'Anuncio'],
+                  datasets: [
+                    {
+                      data: postsMonth,
+                      backgroundColor: ['#36A2EB', '#FFCE56', '#FF6384', '#4BC0C0'],
+                    },
+                  ],
+                }}
+              />
             </CCardBody>
           </CCard>
         </CCol>
-        <CCol>
+        <CCol md={6}>
           <CCard>
             <CCardBody>
-              <h4>Visitas</h4>
-              <canvas ref={donutChart2Ref}></canvas>
+              <h5>Publicaciones del año</h5>
+              <CChartDoughnut
+                data={{
+                  labels: ['Proyecto', 'Evento', 'Noticia', 'Anuncio'],
+                  datasets: [
+                    {
+                      data: postsYear,
+                      backgroundColor: ['#36A2EB', '#FFCE56', '#FF6384', '#4BC0C0'],
+                    },
+                  ],
+                }}
+              />
             </CCardBody>
           </CCard>
         </CCol>
       </CRow>
-
-
-      <CRow className="mt-4">
-        <CCol>
+      <CRow className="component-space">
+        <CCol md={12}>
           <CCard>
             <CCardBody>
-              <h4>Alcance de redes</h4>
-              <canvas ref={barChartRef}></canvas>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-
-    
-      <CRow className="mt-4">
-        <CCol>
-          <CCard>
-            <CCardBody>
-              <h4>Últimas Publicaciones</h4>
-              <CTable striped hover>
+              <h5>Últimos 5 login</h5>
+              <CTable striped hover responsive>
                 <CTableHead>
                   <CTableRow>
-                    <CTableHeaderCell>Fecha</CTableHeaderCell>
-                    <CTableHeaderCell>Descripción</CTableHeaderCell>
-                    <CTableHeaderCell>Estado</CTableHeaderCell>
-                    <CTableHeaderCell>Usuario</CTableHeaderCell>
-                    <CTableHeaderCell>Acción</CTableHeaderCell>
+                    <CTableHeaderCell>Nombre</CTableHeaderCell>
+                    <CTableHeaderCell>Apellido</CTableHeaderCell>
+                    <CTableHeaderCell>Comunidad</CTableHeaderCell>
+                    <CTableHeaderCell>Último acceso</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {publicaciones.map((pub, index) => (
-                    <CTableRow key={index}>
-                      <CTableDataCell>{pub.fecha}</CTableDataCell>
-                      <CTableDataCell>{pub.descripcion}</CTableDataCell>
-                      <CTableDataCell>{pub.estado}</CTableDataCell>
-                      <CTableDataCell>{pub.usuario}</CTableDataCell>
-                      <CTableDataCell>
-                        <CButton color="danger" size="sm" className="me-2">
-                          Eliminar
-                        </CButton>
-                        <CButton color="primary" size="sm">
-                          Ver
-                        </CButton>
-                      </CTableDataCell>
+                  {users.map((user) => (
+                    <CTableRow key={user.id}>
+                      <CTableDataCell>{user.first_name}</CTableDataCell>
+                      <CTableDataCell>{user.last_name}</CTableDataCell>
+                      <CTableDataCell>{user.community}</CTableDataCell>
+                      <CTableDataCell>{user.last_login}</CTableDataCell>
                     </CTableRow>
                   ))}
                 </CTableBody>
@@ -147,16 +107,44 @@ const Dashboard = () => {
           </CCard>
         </CCol>
       </CRow>
-
-      <CRow className="mt-4 text-center">
+      <CRow className="component-space">
         <CCol>
-          <CButton color="secondary">Botonrapido</CButton>
-        </CCol>
-        <CCol>
-          <CButton color="secondary">Botonrapido2</CButton>
-        </CCol>
-        <CCol>
-          <CButton color="secondary">Publicar</CButton>
+          <CCard>
+            <CCardBody>
+              <h5>Publicaciones por mes en el año</h5>
+              <CChartBar
+                data={{
+                  labels: [
+                    'Enero',
+                    'Febrero',
+                    'Marzo',
+                    'Abril',
+                    'Mayo',
+                    'Junio',
+                    'Julio',
+                    'Agosto',
+                    'Septiembre',
+                    'Octubre',
+                    'Noviembre',
+                    'Diciembre',
+                  ],
+                  datasets: [
+                    {
+                      label: 'Publicaciones',
+                      backgroundColor: '#36A2EB',
+                      data: postsPerMonth,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  plugins: {
+                    legend: { display: false },
+                  },
+                }}
+              />
+            </CCardBody>
+          </CCard>
         </CCol>
       </CRow>
     </div>
