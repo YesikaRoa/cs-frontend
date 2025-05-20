@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CButton,
@@ -18,27 +18,25 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilEnvelopeClosed } from '@coreui/icons'
-
-const defaultUser = {
-  nombre: 'Diego Altamiranda',
-  email: 'diegoaltamiranda22@gmail.com',
-  password: '1234',
-}
+import authApi from '../../../api/endpoints/authApi'
+import AlertMessage from '../../../components/ui/AlertMessage'
 
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setContraseña] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [recoverEmail, setEmailRecuperacion] = useState('')
+  const [alertData, setAlertData] = useState(null)
+
   const navigate = useNavigate()
 
   const handleLogin = () => {
-    if (email === defaultUser.email && password === defaultUser.password) {
-      localStorage.setItem('userToken', 'tokenEjemplo')
-      navigate('/dashboard')
-    } else {
-      alert('Correo o contraseña incorrecta. Intente nuevamente.')
-    }
+    authApi
+      .login({ email, password })
+      .then(() => navigate('/dashboard'))
+      .catch(({ response }) => {
+        setAlertData({ response: response.data, type: 'danger' })
+      })
   }
 
   const handleRecoverPassword = () => {
@@ -128,6 +126,14 @@ const Login = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {alertData && (
+        <AlertMessage
+          response={alertData.response}
+          type={alertData.type}
+          onClose={() => setAlertData(null)}
+        />
+      )}
     </div>
   )
 }

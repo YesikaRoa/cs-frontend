@@ -5,3 +5,14 @@
 .component-space {
   margin-bottom: 1rem;
 }
+
+.alert {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  min-width: 300px;
+  max-width: 90%;
+  text-align: center;
+}
