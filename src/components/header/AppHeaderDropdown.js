@@ -28,6 +28,7 @@ const AppHeaderDropdown = () => {
   const navigate = useNavigate()
 
   const handleLogout = () => {
+    console.log('Logout')
     localStorage.removeItem('authToken')
     navigate('/login')
   }

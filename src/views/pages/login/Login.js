@@ -36,7 +36,7 @@ const Login = () => {
       .then(() => navigate('/dashboard'))
       .catch(({ response }) => {
         setAlertData({ response: response.data, type: 'danger' })
-      })
+      })<
   }
 
   const handleRecoverPassword = () => {
