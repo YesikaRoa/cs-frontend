@@ -1,0 +1,16 @@
+[33m5afd905[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mto_clean/27[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{0}: checkout: moving from main to to_clean/27
+[33m5afd905[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mto_clean/27[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{1}: checkout: moving from Joan/f to main
+[33ma1fbf15[m[33m ([m[1;31morigin/Joan/f[m[33m, [m[1;32mJoan/f[m[33m)[m HEAD@{2}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33mac4225b[m HEAD@{3}: commit: Modificacion de dashboard, implemento de modals
+[33m1ce6100[m HEAD@{4}: commit: Panel de publicacion, Pnel de mi comunidad
+[33m894e24b[m HEAD@{5}: checkout: moving from feature/8 to Joan/f
+[33mcbf9f5e[m[33m ([m[1;31morigin/feature/8[m[33m, [m[1;32mfeature/8[m[33m)[m HEAD@{6}: checkout: moving from Joan/f to feature/8
+[33m894e24b[m HEAD@{7}: pull origin new/8: Fast-forward
+[33ma652957[m HEAD@{8}: checkout: moving from main to Joan/f
+[33ma652957[m HEAD@{9}: checkout: moving from Joan/f to main
+[33ma652957[m HEAD@{10}: checkout: moving from main to Joan/f
+[33ma652957[m HEAD@{11}: checkout: moving from feature/8 to main
+[33mcbf9f5e[m[33m ([m[1;31morigin/feature/8[m[33m, [m[1;32mfeature/8[m[33m)[m HEAD@{12}: checkout: moving from new/8 to feature/8
+[33m894e24b[m HEAD@{13}: checkout: moving from feature/8 to new/8
+[33mcbf9f5e[m[33m ([m[1;31morigin/feature/8[m[33m, [m[1;32mfeature/8[m[33m)[m HEAD@{14}: checkout: moving from main to feature/8
+[33ma652957[m HEAD@{15}: clone: from https://github.com/YesikaRoa/cs-frontend.git
