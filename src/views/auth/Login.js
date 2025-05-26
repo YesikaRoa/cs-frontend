@@ -18,25 +18,32 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilEnvelopeClosed } from '@coreui/icons'
-import authApi from '../../../api/endpoints/authApi'
-import AlertMessage from '../../../components/ui/AlertMessage'
+import authApi from '../../api/endpoints/authApi'
+import AlertMessage from '../../components/ui/AlertMessage'
 
 const Login = () => {
+  const navigate = useNavigate()
+
   const [email, setEmail] = useState('')
   const [password, setContraseña] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [recoverEmail, setEmailRecuperacion] = useState('')
   const [alertData, setAlertData] = useState(null)
-
-  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = () => {
+    setLoading(true)
+    localStorage.removeItem('authToken')
+
     authApi
-      .login({ email, password })
-      .then(() => navigate('/dashboard'))
+      .login({ email: email.trim(), password: password.trim() })
+      .then(() => {
+        navigate('/dashboard')
+      })
       .catch(({ response }) => {
         setAlertData({ response: response.data, type: 'danger' })
       })
+      .finally(() => setLoading(false))
   }
 
   const handleRecoverPassword = () => {
@@ -82,12 +89,17 @@ const Login = () => {
 
                   <CRow>
                     <CCol xs={6}>
-                      <CButton color="primary" className="px-4" onClick={handleLogin}>
-                        Iniciar Sesión
+                      <CButton
+                        color="primary"
+                        className="px-4"
+                        onClick={handleLogin}
+                        disabled={loading || !email || !password}
+                      >
+                        {loading ? 'Cargando...' : 'Iniciar Sesión'}
                       </CButton>
                     </CCol>
                     <CCol xs={6} className="text-right">
-                      <CButton color="link" className="px-0" onClick={() => setShowModal(true)}>
+                      <CButton className="px-0 float-end" onClick={() => setShowModal(true)}>
                         Recuperar Contraseña
                       </CButton>
                     </CCol>

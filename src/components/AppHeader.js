@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+
 import {
   CContainer,
   CDropdown,
@@ -13,17 +14,22 @@ import {
   useColorModes,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilContrast, cilMenu, cilMoon, cilSun } from '@coreui/icons'
+import { cilContrast, cilMenu, cilMoon, cilSun, cilExitToApp } from '@coreui/icons'
 
 import { AppBreadcrumb } from './index'
-import { AppHeaderDropdown } from './header/index'
 
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  const navigate = useNavigate()
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken')
+    navigate('/login')
+  }
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
@@ -88,7 +94,13 @@ const AppHeader = () => {
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
-          <AppHeaderDropdown />
+          <CIcon
+            onClick={handleLogout}
+            style={{ marginTop: '10px', marginLeft: '10px' }}
+            icon={cilExitToApp}
+            size="lg"
+            className="cursor-pointer"
+          />
         </CHeaderNav>
       </CContainer>
       <CContainer className="px-4" fluid>

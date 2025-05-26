@@ -1,5 +1,4 @@
 import React from 'react'
-import Publications from './views/posts/Posts'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Users = React.lazy(() => import('./views/users/Users'))
@@ -9,12 +8,31 @@ const Profile = React.lazy(() => import('./views/profile/Profile'))
 
 const routes = [
   { path: '/', exact: true, name: 'Inicio' },
-  { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-  { path: '/users', name: 'Users', element: Users },
-  { path: '/publications', name: 'Publications', element: Publications },
-  { path: '/community', name: 'Community', element: Community },
-  { path: '/posts', name: 'Posts', element: Posts },
-  { path: '/profile', name: 'Profile', element: Profile },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    element: Dashboard,
+    roles: ['Admin', 'Community_Leader', 'Street_Leader'],
+  },
+  { path: '/users', name: 'Users', element: Users, roles: ['Admin', 'Community_Leader'] },
+  {
+    path: '/community',
+    name: 'Community',
+    element: Community,
+    roles: ['Admin', 'Community_Leader'],
+  },
+  {
+    path: '/posts',
+    name: 'Posts',
+    element: Posts,
+    roles: ['Admin', 'Community_Leader', 'Street_Leader'],
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    element: Profile,
+    roles: ['Admin', 'Community_Leader', 'Street_Leader'],
+  },
 ]
 
 export default routes
