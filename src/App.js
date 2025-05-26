@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react'
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 
 import { CSpinner, useColorModes } from '@coreui/react'
@@ -8,9 +8,9 @@ import './scss/custom.scss'
 
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 
-const Login = React.lazy(() => import('./views/pages/login/Login'))
-const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
-const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
+const Login = React.lazy(() => import('./views/auth/Login'))
+const Page404 = React.lazy(() => import('./views/errors/Page404'))
+const Page500 = React.lazy(() => import('./views/errors/Page500'))
 
 const isAuthenticated = () => localStorage.getItem('authToken') !== null
 
@@ -43,11 +43,7 @@ const App = () => {
           <Route path="/login" name="Login Page" element={<Login />} />
           <Route path="/404" name="Page 404" element={<Page404 />} />
           <Route path="/500" name="Page 500" element={<Page500 />} />
-          <Route
-            path="*"
-            name="Home"
-            element={isAuthenticated() ? <DefaultLayout /> : <Navigate to="/login" />}
-          />
+          <Route path="*" name="Home" element={<DefaultLayout />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
