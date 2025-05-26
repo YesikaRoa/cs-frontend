@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import userApi from '../../api/endpoints/userApi'
 import {
   CCard,
   CCardBody,
@@ -22,17 +23,7 @@ import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
 
 const Users = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      nombre: 'Diego',
-      apellido: 'Altamiranda',
-      telefono: '04247028764',
-      email: 'diegoaltamiranda22@gmail.com',
-      comunidad: 'Lote H Rio Zuniga',
-      rol: 'Lider de calle',
-    },
-  ])
+  const [users, setUsers] = useState([])
 
   const [selectedUser, setSelectedUser] = useState(null)
   const [viewModal, setViewModal] = useState(false)
@@ -41,7 +32,6 @@ const Users = () => {
   const [deleteModal, setDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
   const [userToEdit, setUserToEdit] = useState(null)
-
   const comunidades = [
     'Lote H Rio Zuniga',
     'Rafael Urdaneta',
@@ -112,6 +102,14 @@ const Users = () => {
     setEditModal(true)
   }
 
+  useEffect(() => {
+    userApi
+      .getUsers()
+      .then((res) => setUsers(res.data.data))
+      .catch((err) => setError('Error al cargar usuarios'))
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="p-3">
       <div className="d-flex justify-content-end mb-3">
@@ -136,7 +134,7 @@ const Users = () => {
             <CTableBody>
               {users.map((user) => (
                 <CTableRow key={user.id}>
-                  <CTableDataCell>{user.nombre}</CTableDataCell>
+                  <CTableDataCell>{user.first_name}</CTableDataCell>
                   <CTableDataCell>{user.apellido}</CTableDataCell>
                   <CTableDataCell>{user.telefono}</CTableDataCell>
                   <CTableDataCell>{user.email}</CTableDataCell>

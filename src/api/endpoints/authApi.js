@@ -1,3 +1,4 @@
+import { resolveConfig } from 'vite'
 import axiosClient from '../axiosClient'
 
 const authApi = {
@@ -5,6 +6,10 @@ const authApi = {
     const { data } = await axiosClient.post('/auth/login', credentials)
     const token = data.data.token
     localStorage.setItem('authToken', token)
+  },
+  recoverPassword: async (email) => {
+    const { data } = await axiosClient.post('/auth/recover-password', { email })
+    return data
   },
 }
 
