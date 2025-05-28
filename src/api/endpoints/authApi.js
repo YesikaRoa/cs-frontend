@@ -1,4 +1,3 @@
-import { resolveConfig } from 'vite'
 import axiosClient from '../axiosClient'
 
 const authApi = {
