@@ -135,11 +135,11 @@ const Users = () => {
               {users.map((user) => (
                 <CTableRow key={user.id}>
                   <CTableDataCell>{user.first_name}</CTableDataCell>
-                  <CTableDataCell>{user.apellido}</CTableDataCell>
-                  <CTableDataCell>{user.telefono}</CTableDataCell>
+                  <CTableDataCell>{user.last_name}</CTableDataCell>
+                  <CTableDataCell>{user?.phone || "No disponible"} </CTableDataCell>
                   <CTableDataCell>{user.email}</CTableDataCell>
-                  <CTableDataCell>{user.comunidad}</CTableDataCell>
-                  <CTableDataCell>{user.rol}</CTableDataCell>
+                  <CTableDataCell>{user.community.name}</CTableDataCell>
+                  <CTableDataCell>{user.role.name}</CTableDataCell>
                   <CTableDataCell>
                     <div className="d-flex">
                       <CButton
@@ -178,22 +178,22 @@ const Users = () => {
           {selectedUser && (
             <ul>
               <li>
-                <strong>Nombre:</strong> {selectedUser.nombre}
+                <strong>Nombre:</strong> {selectedUser.first_name}
               </li>
               <li>
-                <strong>Apellido:</strong> {selectedUser.apellido}
+                <strong>Apellido:</strong> {selectedUser.last_name}
               </li>
               <li>
-                <strong>Teléfono:</strong> {selectedUser.telefono}
+                <strong>Teléfono:</strong> {selectedUser.phone}
               </li>
               <li>
                 <strong>Email:</strong> {selectedUser.email}
               </li>
               <li>
-                <strong>Comunidad:</strong> {selectedUser.comunidad}
+                <strong>Comunidad:</strong> {selectedUser.community.name}
               </li>
               <li>
-                <strong>Rol:</strong> {selectedUser.rol}
+                <strong>Rol:</strong> {selectedUser.role.name}
               </li>
             </ul>
           )}
@@ -214,21 +214,21 @@ const Users = () => {
             <CFormInput
               label="Nombre"
               name="nombre"
-              value={newUser.nombre}
+              value={newUser.first_name}
               onChange={handleInputChange}
               className="mb-2"
             />
             <CFormInput
               label="Apellido"
               name="apellido"
-              value={newUser.apellido}
+              value={newUser.last_name}
               onChange={handleInputChange}
               className="mb-2"
             />
             <CFormInput
               label="Teléfono"
               name="telefono"
-              value={newUser.telefono}
+              value={newUser.phone}
               onChange={handleInputChange}
               className="mb-2"
             />
@@ -242,7 +242,7 @@ const Users = () => {
             <CFormSelect
               label="Comunidad"
               name="comunidad"
-              value={newUser.comunidad}
+              value={newUser?.community?.name}
               onChange={handleInputChange}
               className="mb-2"
             >
@@ -255,8 +255,8 @@ const Users = () => {
             </CFormSelect>
             <CFormSelect
               label="Rol"
-              name="rol"
-              value={newUser.rol}
+              name="rnpm stol"
+              value={newUser?.role?.name}
               onChange={handleInputChange}
               className="mb-2"
             >
@@ -288,19 +288,19 @@ const Users = () => {
             <CForm>
               <CFormInput
                 label="Nombre"
-                value={userToEdit.nombre}
+                value={userToEdit.first_name}
                 onChange={(e) => setUserToEdit({ ...userToEdit, nombre: e.target.value })}
                 className="mb-2"
               />
               <CFormInput
                 label="Apellido"
-                value={userToEdit.apellido}
+                value={userToEdit.last_name}
                 onChange={(e) => setUserToEdit({ ...userToEdit, apellido: e.target.value })}
                 className="mb-2"
               />
               <CFormInput
                 label="Teléfono"
-                value={userToEdit.telefono}
+                value={userToEdit.phone}
                 onChange={(e) => setUserToEdit({ ...userToEdit, telefono: e.target.value })}
                 className="mb-2"
               />
@@ -312,7 +312,7 @@ const Users = () => {
               />
               <CFormSelect
                 label="Comunidad"
-                value={userToEdit.comunidad}
+                value={userToEdit.community.name}
                 onChange={(e) => setUserToEdit({ ...userToEdit, comunidad: e.target.value })}
                 className="mb-2"
               >
@@ -325,7 +325,7 @@ const Users = () => {
               </CFormSelect>
               <CFormSelect
                 label="Rol"
-                value={userToEdit.rol}
+                value={userToEdit.role.name}
                 onChange={(e) => setUserToEdit({ ...userToEdit, rol: e.target.value })}
                 className="mb-2"
               >
@@ -344,12 +344,12 @@ const Users = () => {
             color="primary"
             onClick={() => {
               if (
-                userToEdit.nombre &&
-                userToEdit.apellido &&
-                userToEdit.telefono &&
+                userToEdit.first_name &&
+                userToEdit.last_name &&
+                userToEdit.phone &&
                 userToEdit.email &&
-                userToEdit.comunidad &&
-                userToEdit.rol
+                userToEdit?.community?.name &&
+                userToEdit?.role?.name
               ) {
                 setUsers(users.map((u) => (u.id === userToEdit.id ? userToEdit : u)))
                 setEditModal(false)
@@ -375,7 +375,7 @@ const Users = () => {
             <p>
               ¿Estás seguro de que deseas eliminar al usuario{' '}
               <strong>
-                {userToDelete.nombre} {userToDelete.apellido}
+                {userToDelete.first_name} {userToDelete.last_name}
               </strong>
               ?
             </p>

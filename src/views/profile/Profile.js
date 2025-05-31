@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   CCard,
   CCardBody,
@@ -12,18 +12,14 @@ import {
   CFormInput,
 } from '@coreui/react'
 
+import profileApi from '../../api/endpoints/profileApi'
+
+
 const Profile = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
 
-  const [userInfo, setUserInfo] = useState({
-    nombre: 'Diego Altamiranda',
-    telefono: '04247028764',
-    email: 'diegoaltamiranda22@gmail.com',
-    direccion: 'Calle 1, Lote H',
-    comunidad: 'Lote H Rio Zuniga',
-    rol: 'Lider de calle',
-  })
+  const [userInfo, setUserInfo] = useState({ })
 
   const [editInfo, setEditInfo] = useState({ ...userInfo })
 
@@ -42,6 +38,21 @@ const Profile = () => {
     setShowEditModal(false)
   }
 
+  useEffect(() => {
+  profileApi.getProfile()
+    .then(response => {
+      console.log("Datos recibidos desde la API:", response.data) // Verifica lo que llega
+      setUserInfo(response.data)
+      setUserInfo({ ...response.data }); // Forzar actualización del estado
+    })
+    .catch(error => {
+      console.error('Error obteniendo perfil:', error)
+    })
+}, [])
+
+
+
+
   return (
     <div className="d-flex justify-content-center align-items-center">
       <CCard style={{ width: '60%', maxWidth: '800px' }}>
@@ -50,22 +61,25 @@ const Profile = () => {
         </CCardHeader>
         <CCardBody>
           <div className="mb-3">
-            <strong>Nombre:</strong> {userInfo.nombre}
+            <strong>Nombre:</strong> {userInfo?.first_name}
           </div>
           <div className="mb-3">
-            <strong>Teléfono:</strong> {userInfo.telefono}
+            <strong>Apellido:</strong> {userInfo?.last_name}
           </div>
           <div className="mb-3">
-            <strong>Email:</strong> {userInfo.email}
+            <strong>Teléfono:</strong> {userInfo?.phone || "No disponible"}
           </div>
           <div className="mb-3">
-            <strong>Dirección:</strong> {userInfo.direccion}
+            <strong>Email:</strong> {userInfo?.email}
           </div>
           <div className="mb-3">
-            <strong>Comunidad:</strong> {userInfo.comunidad}
+            <strong>Dirección:</strong> {userInfo?.community?.address || "No disponible"}
           </div>
           <div className="mb-3">
-            <strong>Rol:</strong> {userInfo.rol}
+            <strong>Comunidad:</strong> {userInfo?.community?.name || "No disponible"}
+          </div>
+          <div className="mb-3">
+            <strong>Rol:</strong> {userInfo?.role?.name || "No disponible"}
           </div>
           <div className="d-flex justify-content-between">
             <CButton color="primary" onClick={() => setShowEditModal(true)}>
@@ -121,13 +135,19 @@ const Profile = () => {
           <CForm>
             <CFormInput
               label="Nombre"
-              value={editInfo.nombre}
+              value={editInfo?.first_name}
               onChange={(e) => setEditInfo({ ...editInfo, nombre: e.target.value })}
               className="mb-2"
             />
             <CFormInput
+              label="Apellido"
+              value={editInfo?.last_name}
+              onChange={(e) => setEditInfo({ ...editInfo, apellido: e.target.value })}
+              className="mb-2"
+            />
+            <CFormInput
               label="Teléfono"
-              value={editInfo.telefono}
+              value={editInfo.phone}
               onChange={(e) => setEditInfo({ ...editInfo, telefono: e.target.value })}
               className="mb-2"
             />
