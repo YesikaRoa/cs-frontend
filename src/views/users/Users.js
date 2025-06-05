@@ -33,21 +33,30 @@ const Users = () => {
   const [userToDelete, setUserToDelete] = useState(null)
   const [userToEdit, setUserToEdit] = useState(null)
   const comunidades = [
-    'Lote H Rio Zuniga',
-    'Rafael Urdaneta',
-    'Lote G de Pirineos I',
-    'Libertador Cineral',
+    { id: 1, name: 'Rafael Urdaneta' },
+    { id: 2, name: 'Libertador Cineral' },
+    { id: 3, name: 'Lote H Rio Zuniga' },
+    { id: 4, name: 'Libertador' },
+    { id: 4, name: 'Lote G Pirineos I' },
   ]
 
-  const roles = ['Lider de calle', 'Jefe de comunidad']
+  const roles = [
+    { id: 1, name: 'Admin' },
+    { id: 2, name: 'Jefe de comunidad' },
+    { id: 3, name: 'Lider de calle' },
+  ]
 
+  const [showWarning, setShowWarning] = useState(false)
+  
   const [newUser, setNewUser] = useState({
-    nombre: '',
-    apellido: '',
-    telefono: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
     email: '',
-    comunidad: '',
-    rol: '',
+    password: '',
+    community_id: '',
+    rol_id: '',
+    is_active: true,
   })
 
   const handleInputChange = (e) => {
@@ -55,30 +64,46 @@ const Users = () => {
     setNewUser({ ...newUser, [name]: value })
   }
 
-  const handleAddUser = () => {
-    if (
-      newUser.nombre &&
-      newUser.apellido &&
-      newUser.telefono &&
-      newUser.email &&
-      newUser.comunidad &&
-      newUser.rol
-    ) {
-      const newId = users.length ? users[users.length - 1].id + 1 : 1
-      setUsers([...users, { id: newId, ...newUser }])
+  const handleAddUser = async () => {
+  if (
+    newUser.first_name &&
+    newUser.last_name &&
+    newUser.phone &&
+    newUser.email &&
+    newUser.password &&
+    newUser.community_id &&
+    newUser.rol_id
+  ) {
+    try {
+      const payload = {
+        ...newUser,
+        community_id: Number(newUser.community_id),
+        rol_id: Number(newUser.rol_id),
+        is_active: true,
+      }
+      const res = await userApi.createUser(payload)
+      setUsers([...users, res.data.data || res.data])
       setNewUser({
-        nombre: '',
-        apellido: '',
-        telefono: '',
+        first_name: '',
+        last_name: '',
+        phone: '',
         email: '',
-        comunidad: '',
-        rol: '',
+        password: '',
+        community_id: '',
+        rol_id: '',
+        is_active: true,
       })
       setAddModal(false)
-    } else {
-      alert('Por favor, complete todos los campos antes de guardar.')
+    } catch (err) {
+      alert('Error al guardar usuario: ' + (err.response?.data?.message || JSON.stringify(err.response?.data) || err.message))
+      console.error(err.response?.data || err)
     }
+  } else {
+    setAddModal(false)
+    setShowWarning(true)
   }
+}
+
 
   const handleDelete = (id) => {
     const user = users.find((u) => u.id === id)
@@ -86,10 +111,17 @@ const Users = () => {
     setDeleteModal(true)
   }
 
-  const confirmDelete = () => {
-    setUsers(users.filter((user) => user.id !== userToDelete.id))
-    setDeleteModal(false)
-    setUserToDelete(null)
+  const confirmDelete = async () => {
+    if (!userToDelete) return
+    try {
+      await userApi.deleteUser(userToDelete.id)
+      setUsers(users.filter((user) => user.id !== userToDelete.id))
+      setDeleteModal(false)
+      setUserToDelete(null)
+    } catch (err) {
+      alert('Error al eliminar usuario')
+      console.error(err)
+    }
   }
 
   const handleView = (user) => {
@@ -102,12 +134,43 @@ const Users = () => {
     setEditModal(true)
   }
 
+  const handleSaveEdit = async () => {
+    if (
+      userToEdit.first_name &&
+      userToEdit.last_name &&
+      userToEdit.phone &&
+      userToEdit.email &&
+      userToEdit.community_id &&
+      userToEdit.rol_id
+    ) {
+      try {
+        const payload = {
+          first_name: userToEdit.first_name,
+          last_name: userToEdit.last_name,
+          phone: userToEdit.phone,
+          email: userToEdit.email,
+          community_id: Number(userToEdit.community_id),
+          rol_id: Number(userToEdit.rol_id),
+          is_active: userToEdit.is_active ?? true,
+        }
+        await userApi.updateUser(userToEdit.id, payload)
+        setUsers(users.map((u) => (u.id === userToEdit.id ? { ...u, ...payload } : u)))
+        setEditModal(false)
+        setUserToEdit(null)
+      } catch (err) {
+        alert('Error al editar usuario')
+        console.error(err)
+      }
+    } else {
+      setShowWarning(true)
+    }
+  }
+
   useEffect(() => {
     userApi
       .getUsers()
       .then((res) => setUsers(res.data.data))
       .catch((err) => setError('Error al cargar usuarios'))
-      .finally(() => setLoading(false))
   }, [])
 
   return (
@@ -138,8 +201,20 @@ const Users = () => {
                   <CTableDataCell>{user.last_name}</CTableDataCell>
                   <CTableDataCell>{user?.phone || "No disponible"} </CTableDataCell>
                   <CTableDataCell>{user.email}</CTableDataCell>
-                  <CTableDataCell>{user.community.name}</CTableDataCell>
-                  <CTableDataCell>{user.role.name}</CTableDataCell>
+                  <CTableDataCell>
+                    {
+                      comunidades.find(c => c.id === (user.community_id || user.community?.id))?.name ||
+                      user.community?.name ||
+                      'No disponible'
+                    }
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    {
+                      roles.find(r => r.id === (user.rol_id || user.role?.id))?.name ||
+                      user.role?.name ||
+                      'No disponible'
+                    }
+                  </CTableDataCell>
                   <CTableDataCell>
                     <div className="d-flex">
                       <CButton
@@ -190,10 +265,18 @@ const Users = () => {
                 <strong>Email:</strong> {selectedUser.email}
               </li>
               <li>
-                <strong>Comunidad:</strong> {selectedUser.community.name}
+                <strong>Comunidad:</strong> {
+                  comunidades.find(c => c.id === (selectedUser.community_id || selectedUser.community?.id))?.name ||
+                  selectedUser.community?.name ||
+                  'No disponible'
+                }
               </li>
               <li>
-                <strong>Rol:</strong> {selectedUser.role.name}
+                <strong>Rol:</strong> {
+                  roles.find(r => r.id === (selectedUser.rol_id || selectedUser.role?.id))?.name ||
+                  selectedUser.role?.name ||
+                  'No disponible'
+                }
               </li>
             </ul>
           )}
@@ -213,21 +296,21 @@ const Users = () => {
           <CForm>
             <CFormInput
               label="Nombre"
-              name="nombre"
+              name="first_name"
               value={newUser.first_name}
               onChange={handleInputChange}
               className="mb-2"
             />
             <CFormInput
               label="Apellido"
-              name="apellido"
+              name="last_name"
               value={newUser.last_name}
               onChange={handleInputChange}
               className="mb-2"
             />
             <CFormInput
               label="Teléfono"
-              name="telefono"
+              name="phone"
               value={newUser.phone}
               onChange={handleInputChange}
               className="mb-2"
@@ -239,31 +322,39 @@ const Users = () => {
               onChange={handleInputChange}
               className="mb-2"
             />
+            <CFormInput
+              label="Contraseña"
+              name="password"
+              type="password"
+              value={newUser.password}
+              onChange={handleInputChange}
+              className="mb-2"
+            />
             <CFormSelect
               label="Comunidad"
-              name="comunidad"
-              value={newUser?.community?.name}
+              name="community_id"
+              value={newUser.community_id}
               onChange={handleInputChange}
               className="mb-2"
             >
               <option value="">Seleccione una comunidad</option>
-              {comunidades.map((comunidad, index) => (
-                <option key={index} value={comunidad}>
-                  {comunidad}
+              {comunidades.map((comunidad) => (
+                <option key={comunidad.id} value={comunidad.id}>
+                  {comunidad.name}
                 </option>
               ))}
             </CFormSelect>
             <CFormSelect
               label="Rol"
-              name="rnpm stol"
-              value={newUser?.role?.name}
+              name="rol_id"
+              value={newUser.rol_id}
               onChange={handleInputChange}
               className="mb-2"
             >
               <option value="">Indique el rol que va a desempeñar</option>
-              {roles.map((rol, index) => (
-                <option key={index} value={rol}>
-                  {rol}
+              {roles.map((rol) => (
+                <option key={rol.id} value={rol.id}>
+                  {rol.name}
                 </option>
               ))}
             </CFormSelect>
@@ -289,19 +380,19 @@ const Users = () => {
               <CFormInput
                 label="Nombre"
                 value={userToEdit.first_name}
-                onChange={(e) => setUserToEdit({ ...userToEdit, nombre: e.target.value })}
+                onChange={(e) => setUserToEdit({ ...userToEdit, first_name: e.target.value })}
                 className="mb-2"
               />
               <CFormInput
                 label="Apellido"
                 value={userToEdit.last_name}
-                onChange={(e) => setUserToEdit({ ...userToEdit, apellido: e.target.value })}
+                onChange={(e) => setUserToEdit({ ...userToEdit, last_name: e.target.value })}
                 className="mb-2"
               />
               <CFormInput
                 label="Teléfono"
                 value={userToEdit.phone}
-                onChange={(e) => setUserToEdit({ ...userToEdit, telefono: e.target.value })}
+                onChange={(e) => setUserToEdit({ ...userToEdit, phone: e.target.value })}
                 className="mb-2"
               />
               <CFormInput
@@ -312,27 +403,27 @@ const Users = () => {
               />
               <CFormSelect
                 label="Comunidad"
-                value={userToEdit.community.name}
-                onChange={(e) => setUserToEdit({ ...userToEdit, comunidad: e.target.value })}
+                value={userToEdit.community_id || ''}
+                onChange={(e) => setUserToEdit({ ...userToEdit, community_id: Number(e.target.value) })}
                 className="mb-2"
               >
                 <option value="">Seleccione una comunidad</option>
-                {comunidades.map((comunidad, index) => (
-                  <option key={index} value={comunidad}>
-                    {comunidad}
+                {comunidades.map((comunidad) => (
+                  <option key={comunidad.id} value={comunidad.id}>
+                    {comunidad.name}
                   </option>
                 ))}
               </CFormSelect>
               <CFormSelect
                 label="Rol"
-                value={userToEdit.role.name}
-                onChange={(e) => setUserToEdit({ ...userToEdit, rol: e.target.value })}
+                value={userToEdit.rol_id || ''}
+                onChange={(e) => setUserToEdit({ ...userToEdit, rol_id: Number(e.target.value) })}
                 className="mb-2"
               >
                 <option value="">Indique el rol que va a desempeñar</option>
-                {roles.map((rol, index) => (
-                  <option key={index} value={rol}>
-                    {rol}
+                {roles.map((rol) => (
+                  <option key={rol.id} value={rol.id}>
+                    {rol.name}
                   </option>
                 ))}
               </CFormSelect>
@@ -340,24 +431,7 @@ const Users = () => {
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton
-            color="primary"
-            onClick={() => {
-              if (
-                userToEdit.first_name &&
-                userToEdit.last_name &&
-                userToEdit.phone &&
-                userToEdit.email &&
-                userToEdit?.community?.name &&
-                userToEdit?.role?.name
-              ) {
-                setUsers(users.map((u) => (u.id === userToEdit.id ? userToEdit : u)))
-                setEditModal(false)
-              } else {
-                alert('Por favor, complete todos los campos.')
-              }
-            }}
-          >
+          <CButton color="primary" onClick={handleSaveEdit}>
             Guardar
           </CButton>
           <CButton color="secondary" onClick={() => setEditModal(false)}>
@@ -388,6 +462,34 @@ const Users = () => {
           <CButton color="secondary" onClick={() => setDeleteModal(false)}>
             Cancelar
           </CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal 
+        visible={showWarning} 
+        onClose={() => setShowWarning(false)} 
+        backdrop="static" 
+        alignment="center"
+      >
+        <CModalHeader>
+          <CModalTitle>Campos incompletos</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          Debe completar todos los campos para continuar.
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setShowWarning(false)}>
+            Cerrar
+          </CButton><CButton 
+            color="primary" 
+            onClick={() => {
+              setShowWarning(false)
+              setAddModal(true) // 
+            }}
+          >
+          Aceptar
+          </CButton>
+
         </CModalFooter>
       </CModal>
     </div>
