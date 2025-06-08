@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import postApi from '../../api/endpoints/postApi'
+
 import {
   CButton,
   CCard,
@@ -25,17 +25,24 @@ import {
   CBadge,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
+
 import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
+import postApi from '../../api/endpoints/postApi'
+
+const postsCategory = ['Project', 'Event', 'News', 'Announcement']
+
+const categoryMap = {
+  Project: 1,
+  Event: 2,
+  News: 3,
+  Announcement: 4,
+}
 
 const initialForm = {
-  id: null,
   title: '',
   content: '',
-  status: 'draft',
-  category_id: '',
-  user_id: '',
-  community_id: '',
-  images: [],
+  category: postsCategory[0],
+  image: '', 
 }
 
 const Posts = () => {
@@ -43,106 +50,80 @@ const Posts = () => {
   const [posts, setPosts] = useState([])
   const [form, setForm] = useState(initialForm)
   const [isEdit, setIsEdit] = useState(false)
-  const [selectedPost, setSelectedPost] = useState(null)
-  const postsCategory = ['Project', 'Event', 'News', 'Announcement']
-
-  const fetchPosts = () => {
-    postApi.getPosts()
-      .then((res) => {
-        setPosts(res.data.data || res.data)
-      })
-      .catch((err) => {
-        console.error('Error al cargar publicaciones:', err)
-      })
-  }
+  const [editId, setEditId] = useState(null)
 
   useEffect(() => {
     fetchPosts()
   }, [])
 
+  const fetchPosts = async () => {
+    try {
+      const res = await postApi.getPosts()
+      setPosts(res.data.data || res.data)
+    } catch {
+      setPosts([])
+    }
+  }
 
   const handleChange = (e) => {
     const { id, value, type, files } = e.target
-    if (type === 'file') {
-      setForm({ ...form, [id]: Array.from(files) })
+    if (type === 'file' && files.length > 0) {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setForm((prev) => ({
+          ...prev,
+          image: ev.target.result,
+          images: [{ url: ev.target.result }],
+        }))
+      }
+      reader.readAsDataURL(files[0])
     } else {
       setForm({ ...form, [id]: value })
     }
   }
 
+  const handleEdit = (post) => {
+    setForm({
+      title: post.title,
+      content: post.content,
+      category: post.category,
+      image: post.image || '',
+    })
+    setEditId(post.id)
+    setIsEdit(true)
+    setVisible(true)
+  }
+
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Seguro que deseas eliminar esta publicación?')) {
+      await postApi.deletePost(id)
+      fetchPosts()
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const newpost = {
+      title: form.title,
+      content: form.content,
+      category_id: categoryMap[form.category],
+      status: "pending_approval",
+      images: form.images || [], // se envía como arreglo de objetos
+    }
     try {
-      const formData = new FormData()
-      formData.append('title', form.title)
-      formData.append('content', form.content)
-      formData.append('status', form.status)
-      formData.append('user_id', Number(form.user_id))
-      formData.append('community_id', Number(form.community_id))
-      formData.append('category_id', Number(form.category_id))
-      if (form.images && form.images.length > 0) {
-        form.images.forEach((img) => {
-          formData.append('images', img)
-        })
-      }
-      if (isEdit) {
-        await postApi.updatePost(form.id, formData)
+      if (isEdit && editId) {
+        await postApi.updatePost(editId, newpost)
       } else {
-        await postApi.createPost(formData)
+        await postApi.createPost(newpost)
       }
       fetchPosts()
       setVisible(false)
       setForm(initialForm)
       setIsEdit(false)
+      setEditId(null)
     } catch (err) {
-      console.error('Error al guardar publicación:', err.response ? err.response.data : err)
-      alert('Error al guardar publicación: ' + (err.response?.data?.message || err.message))
+      alert('Error al guardar publicación')
     }
-  }
-
-
-  const handleEdit = (post) => {
-    setForm({
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      status: post.status,
-      category_id: post.category_id,
-      user_id: post.user_id,
-      community_id: post.community_id,
-    })
-    setIsEdit(true)
-    setVisible(true)
-  }
-
-
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Seguro que deseas eliminar esta publicación?')) {
-      try {
-        await postApi.deletePost(id)
-        fetchPosts()
-      } catch (err) {
-        console.error('Error al eliminar publicación:', err)
-      }
-    }
-  }
-
-  const handleView = async (post) => {
-    try {
-      const res = await postApi.getPostById(post.id)
-      setSelectedPost(res.data)
-      alert(`Título: ${res.data.title}\nContenido: ${res.data.content}`)
-    } catch (err) {
-      console.error('Error al obtener publicación:', err)
-    }
-  }
-
-
-  const handleOpenCreate = () => {
-    setForm(initialForm)
-    setIsEdit(false)
-    setVisible(true)
   }
 
   return (
@@ -150,13 +131,16 @@ const Posts = () => {
       <CModal
         size="xl"
         visible={visible}
-        onClose={() => setVisible(false)}
+        onClose={() => {
+          setVisible(false)
+          setForm(initialForm)
+          setIsEdit(false)
+          setEditId(null)
+        }}
         aria-labelledby="OptionalSizesExample1"
       >
         <CModalHeader>
-          <CModalTitle id="OptionalSizesExample1">
-            {isEdit ? 'Editar Publicación' : 'Crear Publicación'}
-          </CModalTitle>
+          <CModalTitle id="OptionalSizesExample1">Crear Publicación</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CRow>
@@ -173,68 +157,35 @@ const Posts = () => {
                         placeholder="Ingrese el título"
                         value={form.title}
                         onChange={handleChange}
-                        required
                       />
                     </div>
+
                     <div className="mb-3">
-                      <CFormLabel htmlFor="content">Contenido</CFormLabel>
+                      <CFormLabel htmlFor="description">Descripción</CFormLabel>
                       <CFormTextarea
                         id="content"
                         rows="4"
-                        placeholder="Ingrese el contenido"
+                        placeholder="Ingrese una descripción"
                         value={form.content}
                         onChange={handleChange}
-                        required
                       />
                     </div>
+
                     <div className="mb-3">
-                      <CFormLabel htmlFor="category_id">Categoria (ID)</CFormLabel>
-                      <CFormInput
-                        type="number"
-                        id="category_id"
-                        placeholder="Ingrese el ID de la categoría"
-                        value={form.category_id}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <CFormLabel htmlFor="user_id">Usuario (ID)</CFormLabel>
-                      <CFormInput
-                        type="number"
-                        id="user_id"
-                        placeholder="Ingrese el ID del usuario"
-                        value={form.user_id}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <CFormLabel htmlFor="community_id">Comunidad (ID)</CFormLabel>
-                      <CFormInput
-                        type="number"
-                        id="community_id"
-                        placeholder="Ingrese el ID de la comunidad"
-                        value={form.community_id}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <CFormLabel htmlFor="status">Estado</CFormLabel>
+                      <CFormLabel htmlFor="category">Categoria</CFormLabel>
                       <CFormSelect
-                        id="status"
-                        value={form.status}
+                        id="category"
+                        value={form.category}
                         onChange={handleChange}
-                        required
                       >
-                        <option value="draft">Borrador</option>
-                        <option value="published">Publicado</option>
+                        <option value="">Seleccione una categoría</option>
+                        {postsCategory.map((cat, idx) => (
+                          <option key={idx} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
                       </CFormSelect>
                     </div>
-                    <CButton color="primary" type="submit">
-                      {isEdit ? 'Actualizar' : 'Guardar'}
-                    </CButton>
                   </CForm>
                 </CCardBody>
               </CCard>
@@ -246,19 +197,25 @@ const Posts = () => {
                   <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
                   <CFormInput
                     type="file"
-                    id="images"
+                    id="image"
                     accept="image/*"
-                    multiple
                     onChange={handleChange}
                   />
-                  <small className="text-muted">* Implementación de imagen opcional</small>
                 </CCardBody>
               </CCard>
             </CCol>
           </CRow>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setVisible(false)}>
+          <CButton color="primary" type="submit" onClick={handleSubmit}>
+            Guardar
+          </CButton>
+          <CButton color="secondary" onClick={() => {
+            setVisible(false)
+            setForm(initialForm)
+            setIsEdit(false)
+            setEditId(null)
+          }}>
             Cerrar
           </CButton>
         </CModalFooter>
@@ -268,11 +225,12 @@ const Posts = () => {
           <h3>Publicaciones</h3>
         </CCol>
         <CCol className="text-end">
-          <CButton color="primary" onClick={handleOpenCreate}>
+          <CButton color="primary" onClick={() => setVisible(!visible)}>
             <CIcon icon={cilUserPlus} /> Crear Publicación
           </CButton>
         </CCol>
       </CRow>
+      <CRow></CRow>
       <CRow className="mt-4">
         <CCol>
           <CCard>
@@ -292,14 +250,14 @@ const Posts = () => {
                   {posts.map((post) => (
                     <CTableRow key={post.id}>
                       <CTableDataCell>{post.title}</CTableDataCell>
-                      <CTableDataCell>{post.category.name}</CTableDataCell>
+                      <CTableDataCell>{post.category?.name || post.category_id}</CTableDataCell>
                       <CTableDataCell>
                         <CBadge color={post.status === 'published' ? 'success' : 'warning'}>
-                          {post.status === 'published' ? 'Publicado' : 'Borrador'}
+                          {post.status === 'published' ? 'Publicado' : 'Pendiente'}
                         </CBadge>
                       </CTableDataCell>
-                      <CTableDataCell>{post.user.first_name}</CTableDataCell>
-                      <CTableDataCell>{new Date(post.created_at).toLocaleDateString()}</CTableDataCell>
+                      <CTableDataCell>{post.user?.first_name || post.user_id}</CTableDataCell>
+                      <CTableDataCell>{post.created_at}</CTableDataCell>
                       <CTableDataCell>
                         <div className="d-flex">
                           <CButton
@@ -318,7 +276,9 @@ const Posts = () => {
                           >
                             <CIcon icon={cilTrash} className="text-white" />
                           </CButton>
-                          <CButton color="info" size="sm" onClick={() => handleView(post)}>
+                          <CButton color="info" size="sm" onClick={() => alert(
+                            `ID: ${post.id}\nTítulo: ${post.title}\nContenido: ${post.content}\nEstado: ${post.status}\nFecha creación: ${post.created_at}\nFecha actualización: ${post.updated_at}\nUsuario: ${post.user.first_name}\nComunidad: ${post.community.name}\nCategoría: ${post.category.name}`
+                          )}>
                             <CIcon icon={cilInfo} className="text-white" />
                           </CButton>
                         </div>
