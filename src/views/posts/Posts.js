@@ -25,35 +25,40 @@ import {
   CBadge,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-
 import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
 import postApi from '../../api/endpoints/postApi'
-
-const postsCategory = ['Project', 'Event', 'News', 'Announcement']
-
-const categoryMap = {
-  Project: 1,
-  Event: 2,
-  News: 3,
-  Announcement: 4,
-}
+import formatDateTime from '../../utils/formatDateTime'
+import AlertMessage from '../../components/ui/AlertMessage'
 
 const initialForm = {
   title: '',
   content: '',
-  category: postsCategory[0],
-  image: '', 
+  category: '',
+  image: '',
+}
+
+const getCategoryNameById = (id) => {
+  const categories = {
+    Proyecto: 1,
+    Evento: 2,
+    Noticia: 3,
+    Anuncio: 4,
+  }
+  return Object.keys(categories).find((key) => categories[key] === id) || ''
 }
 
 const Posts = () => {
   const [visible, setVisible] = useState(false)
   const [posts, setPosts] = useState([])
+  const [postsCategories, setPostsCategories] = useState([])
   const [form, setForm] = useState(initialForm)
   const [isEdit, setIsEdit] = useState(false)
   const [editId, setEditId] = useState(null)
+  const [alertData, setAlertData] = useState(null)
 
   useEffect(() => {
     fetchPosts()
+    fetchPostsCategories()
   }, [])
 
   const fetchPosts = async () => {
@@ -62,6 +67,15 @@ const Posts = () => {
       setPosts(res.data.data || res.data)
     } catch {
       setPosts([])
+    }
+  }
+
+  const fetchPostsCategories = async () => {
+    try {
+      const res = await postApi.getPostCategories()
+      setPostsCategories(res.data.data || res.data)
+    } catch {
+      setPostsCategories([])
     }
   }
 
@@ -86,9 +100,10 @@ const Posts = () => {
     setForm({
       title: post.title,
       content: post.content,
-      category: post.category,
+      category: post.category?.id,
       image: post.image || '',
     })
+
     setEditId(post.id)
     setIsEdit(true)
     setVisible(true)
@@ -106,23 +121,26 @@ const Posts = () => {
     const newpost = {
       title: form.title,
       content: form.content,
-      category_id: categoryMap[form.category],
-      status: "pending_approval",
-      images: form.images || [], // se envía como arreglo de objetos
+      category_id: Number(form.category),
+      status: 'pending_approval',
+      images: form.images || [],
     }
+
     try {
+      let response
       if (isEdit && editId) {
-        await postApi.updatePost(editId, newpost)
+        response = await postApi.updatePost(editId, newpost)
       } else {
-        await postApi.createPost(newpost)
+        response = await postApi.createPost(newpost)
       }
+      setAlertData({ response: response.data, type: 'success' })
       fetchPosts()
       setVisible(false)
       setForm(initialForm)
       setIsEdit(false)
       setEditId(null)
-    } catch (err) {
-      alert('Error al guardar publicación')
+    } catch ({ response }) {
+      setAlertData({ response: response.data, type: 'danger' })
     }
   }
 
@@ -173,15 +191,11 @@ const Posts = () => {
 
                     <div className="mb-3">
                       <CFormLabel htmlFor="category">Categoria</CFormLabel>
-                      <CFormSelect
-                        id="category"
-                        value={form.category}
-                        onChange={handleChange}
-                      >
+                      <CFormSelect id="category" value={form.category} onChange={handleChange}>
                         <option value="">Seleccione una categoría</option>
-                        {postsCategory.map((cat, idx) => (
-                          <option key={idx} value={cat}>
-                            {cat}
+                        {postsCategories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
                           </option>
                         ))}
                       </CFormSelect>
@@ -195,12 +209,7 @@ const Posts = () => {
                 <CCardBody>
                   <h3>Subir Imagen</h3>
                   <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
-                  <CFormInput
-                    type="file"
-                    id="image"
-                    accept="image/*"
-                    onChange={handleChange}
-                  />
+                  <CFormInput type="file" id="image" accept="image/*" onChange={handleChange} />
                 </CCardBody>
               </CCard>
             </CCol>
@@ -210,12 +219,15 @@ const Posts = () => {
           <CButton color="primary" type="submit" onClick={handleSubmit}>
             Guardar
           </CButton>
-          <CButton color="secondary" onClick={() => {
-            setVisible(false)
-            setForm(initialForm)
-            setIsEdit(false)
-            setEditId(null)
-          }}>
+          <CButton
+            color="secondary"
+            onClick={() => {
+              setVisible(false)
+              setForm(initialForm)
+              setIsEdit(false)
+              setEditId(null)
+            }}
+          >
             Cerrar
           </CButton>
         </CModalFooter>
@@ -250,14 +262,14 @@ const Posts = () => {
                   {posts.map((post) => (
                     <CTableRow key={post.id}>
                       <CTableDataCell>{post.title}</CTableDataCell>
-                      <CTableDataCell>{post.category?.name || post.category_id}</CTableDataCell>
+                      <CTableDataCell>{getCategoryNameById(post.category?.id)}</CTableDataCell>
                       <CTableDataCell>
                         <CBadge color={post.status === 'published' ? 'success' : 'warning'}>
                           {post.status === 'published' ? 'Publicado' : 'Pendiente'}
                         </CBadge>
                       </CTableDataCell>
                       <CTableDataCell>{post.user?.first_name || post.user_id}</CTableDataCell>
-                      <CTableDataCell>{post.created_at}</CTableDataCell>
+                      <CTableDataCell>{formatDateTime(post.created_at)}</CTableDataCell>
                       <CTableDataCell>
                         <div className="d-flex">
                           <CButton
@@ -276,9 +288,15 @@ const Posts = () => {
                           >
                             <CIcon icon={cilTrash} className="text-white" />
                           </CButton>
-                          <CButton color="info" size="sm" onClick={() => alert(
-                            `ID: ${post.id}\nTítulo: ${post.title}\nContenido: ${post.content}\nEstado: ${post.status}\nFecha creación: ${post.created_at}\nFecha actualización: ${post.updated_at}\nUsuario: ${post.user.first_name}\nComunidad: ${post.community.name}\nCategoría: ${post.category.name}`
-                          )}>
+                          <CButton
+                            color="info"
+                            size="sm"
+                            onClick={() =>
+                              alert(
+                                `ID: ${post.id}\nTítulo: ${post.title}\nContenido: ${post.content}\nEstado: ${post.status}\nFecha creación: ${post.created_at}\nFecha actualización: ${post.updated_at}\nUsuario: ${post.user.first_name}\nComunidad: ${post.community.name}\nCategoría: ${post.category.name}`,
+                              )
+                            }
+                          >
                             <CIcon icon={cilInfo} className="text-white" />
                           </CButton>
                         </div>
@@ -291,6 +309,13 @@ const Posts = () => {
           </CCard>
         </CCol>
       </CRow>
+      {alertData && (
+        <AlertMessage
+          response={alertData.response}
+          type={alertData.type}
+          onClose={() => setAlertData(null)}
+        />
+      )}
     </div>
   )
 }
