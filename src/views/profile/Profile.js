@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   CCard,
   CCardBody,
@@ -12,26 +12,27 @@ import {
   CFormInput,
   CModalTitle,
 } from '@coreui/react'
+import AlertMessage from '../../components/ui/AlertMessage'
 
 import profileApi from '../../api/endpoints/profileApi'
+import { getRoleNameByKey } from '../../utils/roles'
 import { z } from 'zod'
 
 const profileSchema = z.object({
-  first_name: z.string().min(1, 'El nombre es obligatorio'),
-  last_name: z.string().min(1, 'El apellido es obligatorio'),
-  phone: z.string().min(10, 'El teléfono es obligatorio'),
+  first_name: z.string().min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres'),
+  last_name: z.string().min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres'),
+  phone: z.string().min(11, 'El teléfono es obligatorio y debe tener al menos 10 caracteres'),
   email: z.string().email('Debe ser un email válido'),
 })
 
 const Profile = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showWarning, setShowWarning] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
   const [userInfo, setUserInfo] = useState({})
   const [editInfo, setEditInfo] = useState({})
   const [password, setPassword] = useState({ current: '', new: '', confirm: '' })
   const [formErrors, setFormErrors] = useState({})
+  const [alertData, setAlertData] = useState(null)
 
   const handleChangePassword = () => {
     setPassword({ current: '', new: '', confirm: '' })
@@ -39,11 +40,11 @@ const Profile = () => {
   }
 
   const handleEditInfo = async () => {
-    // Esto es para validar el zod antes de enviar los datos 
+    // Esto es para validar el zod antes de enviar los datos
     const result = profileSchema.safeParse(editInfo)
     if (!result.success) {
       const errors = {}
-      result.error.errors.forEach(err => {
+      result.error.errors.forEach((err) => {
         errors[err.path[0]] = err.message
       })
       setFormErrors(errors)
@@ -58,23 +59,28 @@ const Profile = () => {
         phone: editInfo.phone,
       }
       const response = await profileApi.editProfile(payload)
-      setUserInfo(response.data.user)
+      setUserInfo((prev) => ({
+        ...prev,
+        first_name: editInfo.first_name,
+        last_name: editInfo.last_name,
+        email: editInfo.email,
+        phone: editInfo.phone,
+      }))
       setShowEditModal(false)
-      setShowSuccess(true)
-    } catch (error) {
-      setShowWarning(true)
-      console.error('Error actualizando perfil:', error)
+      setAlertData({ response: response.data, type: 'success' })
+    } catch ({ response }) {
+      setAlertData({ response: response.data, type: 'danger' })
     }
   }
 
   useEffect(() => {
-    profileApi.getProfile()
-      .then(response => {
+    profileApi
+      .getProfile()
+      .then((response) => {
         setUserInfo(response.data)
       })
-      .catch(error => {
-        setShowWarning(true)
-        console.error('Error obteniendo perfil:', error)
+      .catch(({ response }) => {
+        setAlertData({ response: response.data, type: 'danger' })
       })
   }, [])
 
@@ -103,19 +109,19 @@ const Profile = () => {
             <strong>Apellido:</strong> {userInfo?.last_name}
           </div>
           <div className="mb-3">
-            <strong>Teléfono:</strong> {userInfo?.phone || "No disponible"}
+            <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
           </div>
           <div className="mb-3">
             <strong>Email:</strong> {userInfo?.email}
           </div>
           <div className="mb-3">
-            <strong>Dirección:</strong> {userInfo?.community?.address || "No disponible"}
+            <strong>Dirección:</strong> {userInfo?.community?.address || 'No disponible'}
           </div>
           <div className="mb-3">
-            <strong>Comunidad:</strong> {userInfo?.community?.name || "No disponible"}
+            <strong>Comunidad:</strong> {userInfo?.community?.name}
           </div>
           <div className="mb-3">
-            <strong>Rol:</strong> {userInfo?.role?.name || "No disponible"}
+            <strong>Rol:</strong> {getRoleNameByKey(userInfo?.role?.name)}
           </div>
           <div className="d-flex justify-content-between">
             <CButton color="primary" onClick={openEditModal}>
@@ -205,7 +211,7 @@ const Profile = () => {
         </CModalBody>
         <CModalFooter>
           <CButton color="primary" onClick={handleEditInfo}>
-            Guardar 
+            Guardar
           </CButton>
           <CButton color="secondary" onClick={() => setShowEditModal(false)}>
             Cancelar
@@ -213,43 +219,13 @@ const Profile = () => {
         </CModalFooter>
       </CModal>
 
-      <CModal 
-        visible={showWarning} 
-        onClose={() => setShowWarning(false)} 
-        backdrop="static" 
-        alignment="center"
-      >
-        <CModalHeader>
-          <CModalTitle>Error</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          Ocurrió un error al actualizar el perfil. Intente nuevamente.
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="primary" onClick={() => setShowWarning(false)}>
-            Aceptar
-          </CButton>
-        </CModalFooter>
-      </CModal>
-
-      <CModal 
-        visible={showSuccess}
-        onClose={() => setShowSuccess(false)}
-        backdrop="static"
-        alignment="center"
-      >
-        <CModalHeader>
-          <CModalTitle>Perfil actualizado</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          La información del perfil se actualizó correctamente.
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="primary" onClick={() => setShowSuccess(false)}>
-            Aceptar
-          </CButton>
-        </CModalFooter>
-      </CModal>
+      {alertData && (
+        <AlertMessage
+          response={alertData.response}
+          type={alertData.type}
+          onClose={() => setAlertData(null)}
+        />
+      )}
     </div>
   )
 }
