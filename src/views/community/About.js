@@ -1,5 +1,5 @@
-import { useState } from 'react'
-
+import { useState, useEffect } from 'react'
+import communityApi from '../../api/endpoints/communityApi'
 import {
   CButton,
   CCard,
@@ -16,6 +16,62 @@ import {
 
 const MyCommunity = () => {
   const [visible, setVisible] = useState(false)
+  const [editSection, setEditSection] = useState(null) 
+  const [info, setInfo] = useState({
+    Misión: { id: null, value: '' },
+    Visión: { id: null, value: '' },
+    'Quiénes Somos': { id: null, value: '' },
+  })
+  const [inputValue, setInputValue] = useState('')
+
+  useEffect(() => {
+    communityApi.getAllCommunityInfo().then(res => {
+      const data = res.data
+      const newInfo = { ...info }
+      data.forEach(item => {
+        if (newInfo[item.title] !== undefined) {
+          newInfo[item.title] = { id: item.id, value: item.value }
+        }
+      })
+      setInfo(newInfo)
+    })
+  }, [])
+
+  
+  const handleEdit = (section) => {
+    setEditSection(section)
+    setInputValue(info[section]?.value || '')
+    setVisible(true)
+  }
+
+  
+  const handleSave = async () => {
+    try {
+      const section = editSection
+      if (!section) return
+      if (info[section].id) {
+        
+        await communityApi.updateCommunityInfo(info[section].id, {
+          title: section,
+          value: inputValue,
+        })
+      } else {
+        
+        const res = await communityApi.createCommunityInfo({
+          title: section,
+          value: inputValue,
+        })
+        info[section].id = res.data.id
+      }
+      setInfo({
+        ...info,
+        [section]: { ...info[section], value: inputValue },
+      })
+      setVisible(false)
+    } catch (err) {
+      alert('Error al guardar: ' + (err.response?.data?.message || err.message))
+    }
+  }
 
   return (
     <>
@@ -26,13 +82,18 @@ const MyCommunity = () => {
         aria-labelledby="VerticallyCenteredExample"
       >
         <CModalHeader>
-          <CModalTitle id="VerticallyCenteredExample">Misión</CModalTitle>
+          <CModalTitle id="VerticallyCenteredExample">{editSection}</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          <CFormInput type="text" placeholder="Descripcion" />
+          <CFormInput
+            type="text"
+            placeholder="Descripción"
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+          />
         </CModalBody>
         <CModalFooter>
-          <CButton color="primary">Guardar</CButton>
+          <CButton color="primary" onClick={handleSave}>Guardar</CButton>
           <CButton color="secondary" onClick={() => setVisible(false)}>
             Cerrar
           </CButton>
@@ -43,12 +104,8 @@ const MyCommunity = () => {
           <CCard>
             <CCardBody>
               <h5>Misión</h5>
-              <p>
-                Fomentar un espacio inclusivo, colaborativo y participativo donde las personas
-                puedan compartir conocimientos, apoyarse mutuamente y construir relaciones
-                significativas que impulsen el crecimiento individual y colectivo.
-              </p>
-              <CButton color="primary" onClick={() => setVisible(!visible)}>
+              <p>{info['Misión'].value}</p>
+              <CButton color="primary" onClick={() => handleEdit('Misión')}>
                 Editar
               </CButton>
             </CCardBody>
@@ -58,12 +115,10 @@ const MyCommunity = () => {
           <CCard>
             <CCardBody>
               <h5>Visión</h5>
-              <p>
-                Ser una comunidad referente por su impacto positivo, donde la diversidad de ideas,
-                la cooperación y el compromiso social transformen vidas y contribuyan al desarrollo
-                sostenible de la sociedad.
-              </p>
-              <CButton color="primary">Editar</CButton>
+              <p>{info['Visión'].value}</p>
+              <CButton color="primary" onClick={() => handleEdit('Visión')}>
+                Editar
+              </CButton>
             </CCardBody>
           </CCard>
         </CCol>
@@ -71,16 +126,10 @@ const MyCommunity = () => {
           <CCard>
             <CCardBody>
               <h5>¿Quiénes Somos?</h5>
-              <p>
-                Somos una comunidad diversa y comprometida, unida por el deseo de compartir
-                conocimientos, experiencias y valores que promuevan el crecimiento personal y
-                colectivo. Nos impulsa la colaboración, el respeto y la participación activa de cada
-                miembro. Creemos en el poder de las conexiones humanas, en la construcción de
-                espacios seguros e inclusivos, y en la transformación positiva a través del diálogo,
-                el aprendizaje y la acción conjunta. Aquí, cada voz cuenta, cada idea suma y cada
-                persona importa.
-              </p>
-              <CButton color="primary">Editar</CButton>
+              <p>{info['Quiénes Somos'].value}</p>
+              <CButton color="primary" onClick={() => handleEdit('Quiénes Somos')}>
+                Editar
+              </CButton>
             </CCardBody>
           </CCard>
         </CCol>
