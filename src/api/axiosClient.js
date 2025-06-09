@@ -21,4 +21,16 @@ axiosClient.interceptors.request.use(
   },
 )
 
+// Interceptor de respuesta para manejar cualquier 401
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('authToken')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  },
+)
+
 export default axiosClient

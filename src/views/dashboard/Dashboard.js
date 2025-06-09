@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   CCard,
   CCardBody,
@@ -12,31 +12,33 @@ import {
   CTableDataCell,
 } from '@coreui/react'
 import { CChartDoughnut, CChartBar } from '@coreui/react-chartjs'
+import dashboardApi from '../../api/endpoints/dashboardApi'
 
 const Dashboard = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      first_name: 'Diego',
-      last_name: 'Altamiranda',
-      community: 'Lote H Rio Zuniga',
-      rol: 'Lider de calle',
-      last_login: '2025-05-10',
-    },
+  const [users, setUsers] = useState([])
+  const [postsMonth, setPostsMonth] = useState([0, 0, 0, 0])
+  const [postsYear, setPostsYear] = useState([0, 0, 0, 0])
+  const [postsPerMonth, setPostsPerMonth] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
-    {
-      id: 2,
-      first_name: 'Yesika',
-      last_name: 'Roa',
-      community: 'Lote H Rio Zuniga',
-      rol: 'Jefe de comunidad',
-      last_login: '2025-05-10',
-    },
-  ])
-
-  const postsMonth = [12, 8, 5, 3] // Proyecto, Evento, Noticia, Anuncio
-  const postsYear = [120, 80, 50, 30]
-  const postsPerMonth = [10, 12, 8, 15, 20, 18, 22, 25, 19, 17, 14, 13]
+  useEffect(() => {
+    dashboardApi.getDashboardData().then(res => {
+      const data = res.data.data 
+      setUsers(data.last_logins || [])
+      setPostsMonth([
+        data.posts_month?.Project || 0,
+        data.posts_month?.Event || 0,
+        data.posts_month?.News || 0,
+        data.posts_month?.Announcement || 0,
+      ])
+      setPostsYear([
+        data.posts_year?.Project || 0,
+        data.posts_year?.Event || 0,
+        data.posts_year?.News || 0,
+        data.posts_year?.Announcement || 0,
+      ])
+      setPostsPerMonth(data.posts_per_month || [0,0,0,0,0,0,0,0,0,0,0,0])
+    })
+  }, [])
 
   return (
     <div>
