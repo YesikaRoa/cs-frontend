@@ -2,6 +2,7 @@ import axiosClient from '../axiosClient'
 
 const profileApi = {
   getProfile: () => axiosClient.get('/profile'),
-  editProfile: () => axiosClient.put('/profile/edit'),
+  editProfile: (data) => axiosClient.put('/profile', data),
 }
-export default profileApi;
+
+export default profileApi

@@ -37,7 +37,7 @@ const Users = () => {
     { id: 2, name: 'Libertador Cineral' },
     { id: 3, name: 'Lote H Rio Zuniga' },
     { id: 4, name: 'Libertador' },
-    { id: 4, name: 'Lote G Pirineos I' },
+    { id: 5, name: 'Lote G Pirineos I' },
   ]
 
   const roles = [
