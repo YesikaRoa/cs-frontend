@@ -16,7 +16,7 @@ import {
 
 const MyCommunity = () => {
   const [visible, setVisible] = useState(false)
-  const [editSection, setEditSection] = useState(null) 
+  const [editSection, setEditSection] = useState(null)
   const [info, setInfo] = useState({
     Misión: { id: null, value: '' },
     Visión: { id: null, value: '' },
@@ -25,38 +25,34 @@ const MyCommunity = () => {
   const [inputValue, setInputValue] = useState('')
 
   useEffect(() => {
-    communityApi.getAllCommunityInfo().then(res => {
-      const data = res.data
-      const newInfo = { ...info }
-      data.forEach(item => {
-        if (newInfo[item.title] !== undefined) {
-          newInfo[item.title] = { id: item.id, value: item.value }
-        }
-      })
-      setInfo(newInfo)
-    })
+    // communityApi.getAllCommunityInfo().then(res => {
+    //   const data = res.data
+    //   const newInfo = { ...info }
+    //   data.forEach(item => {
+    //     if (newInfo[item.title] !== undefined) {
+    //       newInfo[item.title] = { id: item.id, value: item.value }
+    //     }
+    //   })
+    //   setInfo(newInfo)
+    // })
   }, [])
 
-  
   const handleEdit = (section) => {
     setEditSection(section)
     setInputValue(info[section]?.value || '')
     setVisible(true)
   }
 
-  
   const handleSave = async () => {
     try {
       const section = editSection
       if (!section) return
       if (info[section].id) {
-        
         await communityApi.updateCommunityInfo(info[section].id, {
           title: section,
           value: inputValue,
         })
       } else {
-        
         const res = await communityApi.createCommunityInfo({
           title: section,
           value: inputValue,
@@ -89,11 +85,13 @@ const MyCommunity = () => {
             type="text"
             placeholder="Descripción"
             value={inputValue}
-            onChange={e => setInputValue(e.target.value)}
+            onChange={(e) => setInputValue(e.target.value)}
           />
         </CModalBody>
         <CModalFooter>
-          <CButton color="primary" onClick={handleSave}>Guardar</CButton>
+          <CButton color="primary" onClick={handleSave}>
+            Guardar
+          </CButton>
           <CButton color="secondary" onClick={() => setVisible(false)}>
             Cerrar
           </CButton>
