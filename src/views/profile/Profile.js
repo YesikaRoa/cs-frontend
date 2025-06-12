@@ -18,11 +18,27 @@ import profileApi from '../../api/endpoints/profileApi'
 import { getRoleNameByKey } from '../../utils/roles'
 import { z } from 'zod'
 
-const profileSchema = z.object({
-  first_name: z.string().min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres'),
-  last_name: z.string().min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres'),
-  phone: z.string().min(11, 'El teléfono es obligatorio y debe tener al menos 10 caracteres'),
-  email: z.string().email('Debe ser un email válido'),
+const updateProfileSchema = z.object({
+  first_name: z.string()
+    .min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres')
+    .max(50, 'El nombre no puede exceder 50 caracteres'),
+  last_name: z.string()
+    .min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres')
+    .max(50, 'El apellido no puede exceder 50 caracteres'),
+  phone: z.string()
+    .max(20, 'El teléfono no puede tener más de 15 caracteres')
+    .optional(),
+  email: z.string()
+    .email('El correo debe ser válido'),
+})
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string()
+    .min(6, 'La contraseña actual es obligatoria y debe tener al menos 6 caracteres'),
+  newPassword: z.string()
+    .min(6, 'La nueva contraseña debe tener al menos 6 caracteres'),
+  confirmNewPassword: z.string()
+    .min(6, 'La confirmación debe tener al menos 6 caracteres'),
 })
 
 const Profile = () => {
@@ -30,18 +46,56 @@ const Profile = () => {
   const [showEditModal, setShowEditModal] = useState(false)
   const [userInfo, setUserInfo] = useState({})
   const [editInfo, setEditInfo] = useState({})
-  const [password, setPassword] = useState({ current: '', new: '', confirm: '' })
+  const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' })
   const [formErrors, setFormErrors] = useState({})
   const [alertData, setAlertData] = useState(null)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [loadingUser, setLoadingUser] = useState(true)
+  const [showWarning, setShowWarning] = useState(false)
+  const [showWrongPassword, setShowWrongPassword] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
 
-  const handleChangePassword = () => {
-    setPassword({ current: '', new: '', confirm: '' })
-    setShowPasswordModal(false)
+  const handleChangePassword = async () => {
+    const result = changePasswordSchema.safeParse(password)
+    if (!result.success) {
+      const errors = {}
+      result.error.errors.forEach((err) => {
+        errors[err.path[0]] = err.message
+      })
+      setFormErrors(errors)
+      return
+    }
+    if (password.newPassword !== password.confirmNewPassword) {
+      setFormErrors({ confirmNewPassword: 'Las contraseñas no coinciden.' })
+      return
+    }
+    setFormErrors({})
+    try {
+      await profileApi.changePassword({
+        currentPassword: password.currentPassword,
+        newPassword: password.newPassword,
+      })
+      setShowPasswordModal(false)
+      setPassword({ currentPassword: '', newPassword: '', confirmNewPassword: '' })
+      setSuccessMessage('Contraseña actualizada correctamente')
+      setShowSuccess(true)
+    } catch (error) {
+      if (
+        error?.response?.status === 401 ||
+        error?.response?.data?.message?.toLowerCase().includes('actual') ||
+        error?.response?.data?.message?.toLowerCase().includes('credenciales')
+      ) {
+        setShowWrongPassword(true)
+      } else {
+        setShowWarning(true)
+      }
+      console.error('Error cambiando contraseña:', error?.response?.data || error)
+    }
   }
 
   const handleEditInfo = async () => {
-    // Esto es para validar el zod antes de enviar los datos
-    const result = profileSchema.safeParse(editInfo)
+    // Validación con zod antes de enviar los datos
+    const result = updateProfileSchema.safeParse(editInfo)
     if (!result.success) {
       const errors = {}
       result.error.errors.forEach((err) => {
@@ -67,7 +121,8 @@ const Profile = () => {
         phone: editInfo.phone,
       }))
       setShowEditModal(false)
-      setAlertData({ response: response.data, type: 'success' })
+      setSuccessMessage('Perfil editado correctamente')
+      setShowSuccess(true)
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -82,6 +137,7 @@ const Profile = () => {
       .catch(({ response }) => {
         setAlertData({ response: response.data, type: 'danger' })
       })
+      .finally(() => setLoadingUser(false))
   }, [])
 
   const openEditModal = () => {
@@ -96,7 +152,12 @@ const Profile = () => {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center">
+    <div className="d-flex justify-content-center align-items-center flex-column">
+      {successMessage && (
+        <div className="alert alert-success text-center w-100" role="alert" style={{ maxWidth: 600 }}>
+          {successMessage}
+        </div>
+      )}
       <CCard style={{ width: '60%', maxWidth: '800px' }}>
         <CCardHeader>
           <h5>Información Personal</h5>
@@ -124,10 +185,19 @@ const Profile = () => {
             <strong>Rol:</strong> {getRoleNameByKey(userInfo?.role?.name)}
           </div>
           <div className="d-flex justify-content-between">
-            <CButton color="primary" onClick={openEditModal}>
+            <CButton
+              color="primary"
+              onClick={openEditModal}
+              disabled={loadingUser}
+            >
               Editar Información
             </CButton>
-            <CButton color="info" className="text-white" onClick={() => setShowPasswordModal(true)}>
+            <CButton
+              color="info"
+              className="text-white"
+              onClick={() => setShowPasswordModal(true)}
+              disabled={loadingUser}
+            >
               Cambiar Contraseña
             </CButton>
           </div>
@@ -141,23 +211,29 @@ const Profile = () => {
             <CFormInput
               type="password"
               label="Contraseña Actual"
-              value={password.current}
-              onChange={(e) => setPassword({ ...password, current: e.target.value })}
+              value={password.currentPassword}
+              onChange={(e) => setPassword({ ...password, currentPassword: e.target.value })}
               className="mb-3"
+              invalid={!!formErrors.currentPassword}
+              feedback={formErrors.currentPassword}
             />
             <CFormInput
               type="password"
               label="Nueva Contraseña"
-              value={password.new}
-              onChange={(e) => setPassword({ ...password, new: e.target.value })}
+              value={password.newPassword}
+              onChange={(e) => setPassword({ ...password, newPassword: e.target.value })}
               className="mb-3"
+              invalid={!!formErrors.newPassword}
+              feedback={formErrors.newPassword}
             />
             <CFormInput
               type="password"
               label="Confirmar Nueva Contraseña"
-              value={password.confirm}
-              onChange={(e) => setPassword({ ...password, confirm: e.target.value })}
+              value={password.confirmNewPassword}
+              onChange={(e) => setPassword({ ...password, confirmNewPassword: e.target.value })}
               className="mb-3"
+              invalid={!!formErrors.confirmNewPassword}
+              feedback={formErrors.confirmNewPassword}
             />
           </CForm>
         </CModalBody>
@@ -215,6 +291,26 @@ const Profile = () => {
           </CButton>
           <CButton color="secondary" onClick={() => setShowEditModal(false)}>
             Cancelar
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal
+        visible={showWrongPassword}
+        onClose={() => setShowWrongPassword(false)}
+        backdrop="static"
+        alignment="center"
+        className="modal-dark-backdrop"
+      >
+        <CModalHeader>
+          <CModalTitle>Contraseña incorrecta</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          La contraseña ingresada es incorrecta
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="primary" onClick={() => setShowWrongPassword(false)}>
+            Aceptar
           </CButton>
         </CModalFooter>
       </CModal>

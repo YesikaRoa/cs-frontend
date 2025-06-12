@@ -21,6 +21,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
+import { z } from 'zod'
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -32,6 +33,10 @@ const Users = () => {
   const [deleteModal, setDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
   const [userToEdit, setUserToEdit] = useState(null)
+  const [showWarning, setShowWarning] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+
   const comunidades = [
     { id: 1, name: 'Rafael Urdaneta' },
     { id: 2, name: 'Libertador Cineral' },
@@ -46,8 +51,17 @@ const Users = () => {
     { id: 3, name: 'Lider de calle' },
   ]
 
-  const [showWarning, setShowWarning] = useState(false)
-  
+
+  const userSchema = z.object({
+    first_name: z.string().min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres'),
+    last_name: z.string().min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres'),
+    phone: z.string().min(11, 'El teléfono es obligatorio y debe tener al menos 10 caracteres'),
+    email: z.string().email('Debe ser un correo electrónico válido'),
+    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
+    community_id: z.string().min(1, 'Debe seleccionar una comunidad'),
+    rol_id: z.string().min(1, 'Debe seleccionar un rol'),
+  })
+
   const [newUser, setNewUser] = useState({
     first_name: '',
     last_name: '',
@@ -59,21 +73,26 @@ const Users = () => {
     is_active: true,
   })
 
+  const [formErrors, setFormErrors] = useState({})
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setNewUser({ ...newUser, [name]: value })
   }
 
   const handleAddUser = async () => {
-  if (
-    newUser.first_name &&
-    newUser.last_name &&
-    newUser.phone &&
-    newUser.email &&
-    newUser.password &&
-    newUser.community_id &&
-    newUser.rol_id
-  ) {
+    // Esto es para validar con zod 
+    const result = userSchema.safeParse(newUser)
+    if (!result.success) {
+      const errors = {}
+      result.error.errors.forEach(err => {
+        errors[err.path[0]] = err.message
+      })
+      setFormErrors(errors)
+      setShowWarning(true)
+      return
+    }
+    setFormErrors({})
     try {
       const payload = {
         ...newUser,
@@ -94,16 +113,13 @@ const Users = () => {
         is_active: true,
       })
       setAddModal(false)
+      setSuccessMessage('Usuario añadido exitosamente')
+      setShowSuccess(true)
     } catch (err) {
       alert('Error al guardar usuario: ' + (err.response?.data?.message || JSON.stringify(err.response?.data) || err.message))
       console.error(err.response?.data || err)
     }
-  } else {
-    setAddModal(false)
-    setShowWarning(true)
   }
-}
-
 
   const handleDelete = (id) => {
     const user = users.find((u) => u.id === id)
@@ -118,6 +134,8 @@ const Users = () => {
       setUsers(users.filter((user) => user.id !== userToDelete.id))
       setDeleteModal(false)
       setUserToDelete(null)
+      setSuccessMessage('Usuario eliminado correctamente')
+      setTimeout(() => setSuccessMessage(''), 3000)
     } catch (err) {
       alert('Error al eliminar usuario')
       console.error(err)
@@ -135,34 +153,37 @@ const Users = () => {
   }
 
   const handleSaveEdit = async () => {
-    if (
-      userToEdit.first_name &&
-      userToEdit.last_name &&
-      userToEdit.phone &&
-      userToEdit.email &&
-      userToEdit.community_id &&
-      userToEdit.rol_id
-    ) {
-      try {
-        const payload = {
-          first_name: userToEdit.first_name,
-          last_name: userToEdit.last_name,
-          phone: userToEdit.phone,
-          email: userToEdit.email,
-          community_id: Number(userToEdit.community_id),
-          rol_id: Number(userToEdit.rol_id),
-          is_active: userToEdit.is_active ?? true,
-        }
-        await userApi.updateUser(userToEdit.id, payload)
-        setUsers(users.map((u) => (u.id === userToEdit.id ? { ...u, ...payload } : u)))
-        setEditModal(false)
-        setUserToEdit(null)
-      } catch (err) {
-        alert('Error al editar usuario')
-        console.error(err)
-      }
-    } else {
+    // Validar con zod (sin password)
+    const result = userSchema.omit({ password: true }).safeParse(userToEdit)
+    if (!result.success) {
+      const errors = {}
+      result.error.errors.forEach(err => {
+        errors[err.path[0]] = err.message
+      })
+      setFormErrors(errors)
       setShowWarning(true)
+      return
+    }
+    setFormErrors({})
+    try {
+      const payload = {
+        first_name: userToEdit.first_name,
+        last_name: userToEdit.last_name,
+        phone: userToEdit.phone,
+        email: userToEdit.email,
+        community_id: Number(userToEdit.community_id),
+        rol_id: Number(userToEdit.rol_id),
+        is_active: userToEdit.is_active ?? true,
+      }
+      await userApi.updateUser(userToEdit.id, payload)
+      setUsers(users.map((u) => (u.id === userToEdit.id ? { ...u, ...payload } : u)))
+      setEditModal(false)
+      setUserToEdit(null)
+      setSuccessMessage('Perfil editado correctamente')
+      setShowSuccess(true)
+    } catch (err) {
+      alert('Error al editar usuario')
+      console.error(err)
     }
   }
 
@@ -175,6 +196,11 @@ const Users = () => {
 
   return (
     <div className="p-3">
+      {successMessage && (
+        <div className="alert alert-success text-center w-100" role="alert" style={{ maxWidth: 800, margin: '0 auto 16px auto' }}>
+          {successMessage}
+        </div>
+      )}
       <div className="d-flex justify-content-end mb-3">
         <CButton color="primary" onClick={() => setAddModal(true)}>
           <CIcon icon={cilUserPlus} /> Crear Usuario
@@ -188,7 +214,7 @@ const Users = () => {
                 <CTableHeaderCell>Nombre</CTableHeaderCell>
                 <CTableHeaderCell>Apellido</CTableHeaderCell>
                 <CTableHeaderCell>Teléfono</CTableHeaderCell>
-                <CTableHeaderCell>Email</CTableHeaderCell>
+                <CTableHeaderCell>Correo Electrónico</CTableHeaderCell>
                 <CTableHeaderCell>Comunidad</CTableHeaderCell>
                 <CTableHeaderCell>Rol</CTableHeaderCell>
                 <CTableHeaderCell>Acciones</CTableHeaderCell>
@@ -259,10 +285,10 @@ const Users = () => {
                 <strong>Apellido:</strong> {selectedUser.last_name}
               </li>
               <li>
-                <strong>Teléfono:</strong> {selectedUser.phone}
+                <strong>Teléfono:</strong> {selectedUser.phone || 'No disponible'} 
               </li>
               <li>
-                <strong>Email:</strong> {selectedUser.email}
+                <strong>Correo Electrónico:</strong> {selectedUser.email}
               </li>
               <li>
                 <strong>Comunidad:</strong> {
@@ -300,6 +326,8 @@ const Users = () => {
               value={newUser.first_name}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.first_name}
+              feedback={formErrors.first_name}
             />
             <CFormInput
               label="Apellido"
@@ -307,6 +335,8 @@ const Users = () => {
               value={newUser.last_name}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.last_name}
+              feedback={formErrors.last_name}
             />
             <CFormInput
               label="Teléfono"
@@ -314,13 +344,17 @@ const Users = () => {
               value={newUser.phone}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.phone}
+              feedback={formErrors.phone}
             />
             <CFormInput
-              label="Email"
+              label="Correo Electrónico"
               name="email"
               value={newUser.email}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.email}
+              feedback={formErrors.email}
             />
             <CFormInput
               label="Contraseña"
@@ -329,6 +363,8 @@ const Users = () => {
               value={newUser.password}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.password}
+              feedback={formErrors.password}
             />
             <CFormSelect
               label="Comunidad"
@@ -336,6 +372,8 @@ const Users = () => {
               value={newUser.community_id}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.community_id}
+              feedback={formErrors.community_id}
             >
               <option value="">Seleccione una comunidad</option>
               {comunidades.map((comunidad) => (
@@ -350,6 +388,8 @@ const Users = () => {
               value={newUser.rol_id}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.rol_id}
+              feedback={formErrors.rol_id}
             >
               <option value="">Indique el rol que va a desempeñar</option>
               {roles.map((rol) => (
@@ -382,30 +422,40 @@ const Users = () => {
                 value={userToEdit.first_name}
                 onChange={(e) => setUserToEdit({ ...userToEdit, first_name: e.target.value })}
                 className="mb-2"
+                invalid={!!formErrors.first_name}
+                feedback={formErrors.first_name}
               />
               <CFormInput
                 label="Apellido"
                 value={userToEdit.last_name}
                 onChange={(e) => setUserToEdit({ ...userToEdit, last_name: e.target.value })}
                 className="mb-2"
+                invalid={!!formErrors.last_name}
+                feedback={formErrors.last_name}
               />
               <CFormInput
                 label="Teléfono"
                 value={userToEdit.phone}
                 onChange={(e) => setUserToEdit({ ...userToEdit, phone: e.target.value })}
                 className="mb-2"
+                invalid={!!formErrors.phone}
+                feedback={formErrors.phone}
               />
               <CFormInput
-                label="Email"
+                label="Correo Electrónico"
                 value={userToEdit.email}
                 onChange={(e) => setUserToEdit({ ...userToEdit, email: e.target.value })}
                 className="mb-2"
+                invalid={!!formErrors.email}
+                feedback={formErrors.email}
               />
               <CFormSelect
                 label="Comunidad"
                 value={userToEdit.community_id || ''}
                 onChange={(e) => setUserToEdit({ ...userToEdit, community_id: Number(e.target.value) })}
                 className="mb-2"
+                invalid={!!formErrors.community_id}
+                feedback={formErrors.community_id}
               >
                 <option value="">Seleccione una comunidad</option>
                 {comunidades.map((comunidad) => (
@@ -419,6 +469,8 @@ const Users = () => {
                 value={userToEdit.rol_id || ''}
                 onChange={(e) => setUserToEdit({ ...userToEdit, rol_id: Number(e.target.value) })}
                 className="mb-2"
+                invalid={!!formErrors.rol_id}
+                feedback={formErrors.rol_id}
               >
                 <option value="">Indique el rol que va a desempeñar</option>
                 {roles.map((rol) => (
@@ -463,35 +515,7 @@ const Users = () => {
             Cancelar
           </CButton>
         </CModalFooter>
-      </CModal>
-
-      <CModal 
-        visible={showWarning} 
-        onClose={() => setShowWarning(false)} 
-        backdrop="static" 
-        alignment="center"
-      >
-        <CModalHeader>
-          <CModalTitle>Campos incompletos</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          Debe completar todos los campos para continuar.
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={() => setShowWarning(false)}>
-            Cerrar
-          </CButton><CButton 
-            color="primary" 
-            onClick={() => {
-              setShowWarning(false)
-              setAddModal(true) // 
-            }}
-          >
-          Aceptar
-          </CButton>
-
-        </CModalFooter>
-      </CModal>
+      </CModal>      
     </div>
   )
 }
