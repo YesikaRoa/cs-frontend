@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { jwtDecode } from 'jwt-decode'
 import { getUserRoleFromToken } from '../../utils/auth'
 
 import {
@@ -253,7 +252,11 @@ const Posts = () => {
                   <CFormInput type="file" id="image" accept="image/*" onChange={handleChange} />
                   {imagePreview && (
                     <div style={{ marginTop: 10 }}>
-                      <img src={imagePreview} alt="preview" style={{ maxWidth: 350, maxHeight: 350, borderRadius: 8 }} />
+                      <img
+                        src={imagePreview}
+                        alt="preview"
+                        style={{ maxWidth: 350, maxHeight: 350, borderRadius: 8 }}
+                      />
                     </div>
                   )}
                 </CCardBody>
@@ -283,9 +286,7 @@ const Posts = () => {
         <CModalHeader onClose={() => setApproveModal(false)}>
           <CModalTitle>Aprobar publicación</CModalTitle>
         </CModalHeader>
-        <CModalBody>
-          {approveMessage}
-        </CModalBody>
+        <CModalBody>{approveMessage}</CModalBody>
         <CModalFooter>
           <CButton color="primary" onClick={() => setApproveModal(false)}>
             Cerrar
@@ -367,17 +368,18 @@ const Posts = () => {
                             >
                               <CIcon icon={cilInfo} className="text-white" />
                             </CButton>
-                            {['Admin', 'Community_Leader'].includes(userRole) && post.status !== 'published' && (
-                              <CButton
-                                color="success"
-                                size="sm"
-                                className="ms-2"
-                                title="Aprobar publicación"
-                                onClick={() => handleApprove(post.id)}
-                              >
-                                <CIcon icon={cilCheck} style={{ color: 'white' }} />
-                              </CButton>
-                            )}
+                            {['Admin', 'Community_Leader'].includes(userRole) &&
+                              post.status !== 'published' && (
+                                <CButton
+                                  color="success"
+                                  size="sm"
+                                  className="ms-2"
+                                  title="Aprobar publicación"
+                                  onClick={() => handleApprove(post.id)}
+                                >
+                                  <CIcon icon={cilCheck} style={{ color: 'white' }} />
+                                </CButton>
+                              )}
                           </div>
                         </CTableDataCell>
                       </CTableRow>
