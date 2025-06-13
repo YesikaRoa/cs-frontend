@@ -21,6 +21,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
+import { z } from 'zod'
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -32,51 +33,91 @@ const Users = () => {
   const [deleteModal, setDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
   const [userToEdit, setUserToEdit] = useState(null)
+  const [showWarning, setShowWarning] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+
   const comunidades = [
-    'Lote H Rio Zuniga',
-    'Rafael Urdaneta',
-    'Lote G de Pirineos I',
-    'Libertador Cineral',
+    { id: 1, name: 'Rafael Urdaneta' },
+    { id: 2, name: 'Libertador Cineral' },
+    { id: 3, name: 'Lote H Rio Zuniga' },
+    { id: 4, name: 'Libertador' },
+    { id: 5, name: 'Lote G Pirineos I' },
   ]
 
-  const roles = ['Lider de calle', 'Jefe de comunidad']
+  const roles = [
+    { id: 1, name: 'Admin' },
+    { id: 2, name: 'Jefe de comunidad' },
+    { id: 3, name: 'Lider de calle' },
+  ]
+
+
+  const userSchema = z.object({
+    first_name: z.string().min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres'),
+    last_name: z.string().min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres'),
+    phone: z.string().min(11, 'El teléfono es obligatorio y debe tener al menos 10 caracteres'),
+    email: z.string().email('Debe ser un correo electrónico válido'),
+    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
+    community_id: z.string().min(1, 'Debe seleccionar una comunidad'),
+    rol_id: z.string().min(1, 'Debe seleccionar un rol'),
+  })
 
   const [newUser, setNewUser] = useState({
-    nombre: '',
-    apellido: '',
-    telefono: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
     email: '',
-    comunidad: '',
-    rol: '',
+    password: '',
+    community_id: '',
+    rol_id: '',
+    is_active: true,
   })
+
+  const [formErrors, setFormErrors] = useState({})
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setNewUser({ ...newUser, [name]: value })
   }
 
-  const handleAddUser = () => {
-    if (
-      newUser.nombre &&
-      newUser.apellido &&
-      newUser.telefono &&
-      newUser.email &&
-      newUser.comunidad &&
-      newUser.rol
-    ) {
-      const newId = users.length ? users[users.length - 1].id + 1 : 1
-      setUsers([...users, { id: newId, ...newUser }])
+  const handleAddUser = async () => {
+    // Esto es para validar con zod 
+    const result = userSchema.safeParse(newUser)
+    if (!result.success) {
+      const errors = {}
+      result.error.errors.forEach(err => {
+        errors[err.path[0]] = err.message
+      })
+      setFormErrors(errors)
+      setShowWarning(true)
+      return
+    }
+    setFormErrors({})
+    try {
+      const payload = {
+        ...newUser,
+        community_id: Number(newUser.community_id),
+        rol_id: Number(newUser.rol_id),
+        is_active: true,
+      }
+      const res = await userApi.createUser(payload)
+      setUsers([...users, res.data.data || res.data])
       setNewUser({
-        nombre: '',
-        apellido: '',
-        telefono: '',
+        first_name: '',
+        last_name: '',
+        phone: '',
         email: '',
-        comunidad: '',
-        rol: '',
+        password: '',
+        community_id: '',
+        rol_id: '',
+        is_active: true,
       })
       setAddModal(false)
-    } else {
-      alert('Por favor, complete todos los campos antes de guardar.')
+      setSuccessMessage('Usuario añadido exitosamente')
+      setShowSuccess(true)
+    } catch (err) {
+      alert('Error al guardar usuario: ' + (err.response?.data?.message || JSON.stringify(err.response?.data) || err.message))
+      console.error(err.response?.data || err)
     }
   }
 
@@ -86,10 +127,19 @@ const Users = () => {
     setDeleteModal(true)
   }
 
-  const confirmDelete = () => {
-    setUsers(users.filter((user) => user.id !== userToDelete.id))
-    setDeleteModal(false)
-    setUserToDelete(null)
+  const confirmDelete = async () => {
+    if (!userToDelete) return
+    try {
+      await userApi.deleteUser(userToDelete.id)
+      setUsers(users.filter((user) => user.id !== userToDelete.id))
+      setDeleteModal(false)
+      setUserToDelete(null)
+      setSuccessMessage('Usuario eliminado correctamente')
+      setTimeout(() => setSuccessMessage(''), 3000)
+    } catch (err) {
+      alert('Error al eliminar usuario')
+      console.error(err)
+    }
   }
 
   const handleView = (user) => {
@@ -102,16 +152,55 @@ const Users = () => {
     setEditModal(true)
   }
 
+  const handleSaveEdit = async () => {
+    // Validar con zod (sin password)
+    const result = userSchema.omit({ password: true }).safeParse(userToEdit)
+    if (!result.success) {
+      const errors = {}
+      result.error.errors.forEach(err => {
+        errors[err.path[0]] = err.message
+      })
+      setFormErrors(errors)
+      setShowWarning(true)
+      return
+    }
+    setFormErrors({})
+    try {
+      const payload = {
+        first_name: userToEdit.first_name,
+        last_name: userToEdit.last_name,
+        phone: userToEdit.phone,
+        email: userToEdit.email,
+        community_id: Number(userToEdit.community_id),
+        rol_id: Number(userToEdit.rol_id),
+        is_active: userToEdit.is_active ?? true,
+      }
+      await userApi.updateUser(userToEdit.id, payload)
+      setUsers(users.map((u) => (u.id === userToEdit.id ? { ...u, ...payload } : u)))
+      setEditModal(false)
+      setUserToEdit(null)
+      setSuccessMessage('Perfil editado correctamente')
+      setShowSuccess(true)
+    } catch (err) {
+      alert('Error al editar usuario')
+      console.error(err)
+    }
+  }
+
   useEffect(() => {
     userApi
       .getUsers()
       .then((res) => setUsers(res.data.data))
       .catch((err) => setError('Error al cargar usuarios'))
-      .finally(() => setLoading(false))
   }, [])
 
   return (
     <div className="p-3">
+      {successMessage && (
+        <div className="alert alert-success text-center w-100" role="alert" style={{ maxWidth: 800, margin: '0 auto 16px auto' }}>
+          {successMessage}
+        </div>
+      )}
       <div className="d-flex justify-content-end mb-3">
         <CButton color="primary" onClick={() => setAddModal(true)}>
           <CIcon icon={cilUserPlus} /> Crear Usuario
@@ -125,7 +214,7 @@ const Users = () => {
                 <CTableHeaderCell>Nombre</CTableHeaderCell>
                 <CTableHeaderCell>Apellido</CTableHeaderCell>
                 <CTableHeaderCell>Teléfono</CTableHeaderCell>
-                <CTableHeaderCell>Email</CTableHeaderCell>
+                <CTableHeaderCell>Correo Electrónico</CTableHeaderCell>
                 <CTableHeaderCell>Comunidad</CTableHeaderCell>
                 <CTableHeaderCell>Rol</CTableHeaderCell>
                 <CTableHeaderCell>Acciones</CTableHeaderCell>
@@ -135,11 +224,23 @@ const Users = () => {
               {users.map((user) => (
                 <CTableRow key={user.id}>
                   <CTableDataCell>{user.first_name}</CTableDataCell>
-                  <CTableDataCell>{user.apellido}</CTableDataCell>
-                  <CTableDataCell>{user.telefono}</CTableDataCell>
+                  <CTableDataCell>{user.last_name}</CTableDataCell>
+                  <CTableDataCell>{user?.phone || "No disponible"} </CTableDataCell>
                   <CTableDataCell>{user.email}</CTableDataCell>
-                  <CTableDataCell>{user.comunidad}</CTableDataCell>
-                  <CTableDataCell>{user.rol}</CTableDataCell>
+                  <CTableDataCell>
+                    {
+                      comunidades.find(c => c.id === (user.community_id || user.community?.id))?.name ||
+                      user.community?.name ||
+                      'No disponible'
+                    }
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    {
+                      roles.find(r => r.id === (user.rol_id || user.role?.id))?.name ||
+                      user.role?.name ||
+                      'No disponible'
+                    }
+                  </CTableDataCell>
                   <CTableDataCell>
                     <div className="d-flex">
                       <CButton
@@ -178,22 +279,30 @@ const Users = () => {
           {selectedUser && (
             <ul>
               <li>
-                <strong>Nombre:</strong> {selectedUser.nombre}
+                <strong>Nombre:</strong> {selectedUser.first_name}
               </li>
               <li>
-                <strong>Apellido:</strong> {selectedUser.apellido}
+                <strong>Apellido:</strong> {selectedUser.last_name}
               </li>
               <li>
-                <strong>Teléfono:</strong> {selectedUser.telefono}
+                <strong>Teléfono:</strong> {selectedUser.phone || 'No disponible'} 
               </li>
               <li>
-                <strong>Email:</strong> {selectedUser.email}
+                <strong>Correo Electrónico:</strong> {selectedUser.email}
               </li>
               <li>
-                <strong>Comunidad:</strong> {selectedUser.comunidad}
+                <strong>Comunidad:</strong> {
+                  comunidades.find(c => c.id === (selectedUser.community_id || selectedUser.community?.id))?.name ||
+                  selectedUser.community?.name ||
+                  'No disponible'
+                }
               </li>
               <li>
-                <strong>Rol:</strong> {selectedUser.rol}
+                <strong>Rol:</strong> {
+                  roles.find(r => r.id === (selectedUser.rol_id || selectedUser.role?.id))?.name ||
+                  selectedUser.role?.name ||
+                  'No disponible'
+                }
               </li>
             </ul>
           )}
@@ -213,57 +322,79 @@ const Users = () => {
           <CForm>
             <CFormInput
               label="Nombre"
-              name="nombre"
-              value={newUser.nombre}
+              name="first_name"
+              value={newUser.first_name}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.first_name}
+              feedback={formErrors.first_name}
             />
             <CFormInput
               label="Apellido"
-              name="apellido"
-              value={newUser.apellido}
+              name="last_name"
+              value={newUser.last_name}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.last_name}
+              feedback={formErrors.last_name}
             />
             <CFormInput
               label="Teléfono"
-              name="telefono"
-              value={newUser.telefono}
+              name="phone"
+              value={newUser.phone}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.phone}
+              feedback={formErrors.phone}
             />
             <CFormInput
-              label="Email"
+              label="Correo Electrónico"
               name="email"
               value={newUser.email}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.email}
+              feedback={formErrors.email}
+            />
+            <CFormInput
+              label="Contraseña"
+              name="password"
+              type="password"
+              value={newUser.password}
+              onChange={handleInputChange}
+              className="mb-2"
+              invalid={!!formErrors.password}
+              feedback={formErrors.password}
             />
             <CFormSelect
               label="Comunidad"
-              name="comunidad"
-              value={newUser.comunidad}
+              name="community_id"
+              value={newUser.community_id}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.community_id}
+              feedback={formErrors.community_id}
             >
               <option value="">Seleccione una comunidad</option>
-              {comunidades.map((comunidad, index) => (
-                <option key={index} value={comunidad}>
-                  {comunidad}
+              {comunidades.map((comunidad) => (
+                <option key={comunidad.id} value={comunidad.id}>
+                  {comunidad.name}
                 </option>
               ))}
             </CFormSelect>
             <CFormSelect
               label="Rol"
-              name="rol"
-              value={newUser.rol}
+              name="rol_id"
+              value={newUser.rol_id}
               onChange={handleInputChange}
               className="mb-2"
+              invalid={!!formErrors.rol_id}
+              feedback={formErrors.rol_id}
             >
               <option value="">Indique el rol que va a desempeñar</option>
-              {roles.map((rol, index) => (
-                <option key={index} value={rol}>
-                  {rol}
+              {roles.map((rol) => (
+                <option key={rol.id} value={rol.id}>
+                  {rol.name}
                 </option>
               ))}
             </CFormSelect>
@@ -288,51 +419,63 @@ const Users = () => {
             <CForm>
               <CFormInput
                 label="Nombre"
-                value={userToEdit.nombre}
-                onChange={(e) => setUserToEdit({ ...userToEdit, nombre: e.target.value })}
+                value={userToEdit.first_name}
+                onChange={(e) => setUserToEdit({ ...userToEdit, first_name: e.target.value })}
                 className="mb-2"
+                invalid={!!formErrors.first_name}
+                feedback={formErrors.first_name}
               />
               <CFormInput
                 label="Apellido"
-                value={userToEdit.apellido}
-                onChange={(e) => setUserToEdit({ ...userToEdit, apellido: e.target.value })}
+                value={userToEdit.last_name}
+                onChange={(e) => setUserToEdit({ ...userToEdit, last_name: e.target.value })}
                 className="mb-2"
+                invalid={!!formErrors.last_name}
+                feedback={formErrors.last_name}
               />
               <CFormInput
                 label="Teléfono"
-                value={userToEdit.telefono}
-                onChange={(e) => setUserToEdit({ ...userToEdit, telefono: e.target.value })}
+                value={userToEdit.phone}
+                onChange={(e) => setUserToEdit({ ...userToEdit, phone: e.target.value })}
                 className="mb-2"
+                invalid={!!formErrors.phone}
+                feedback={formErrors.phone}
               />
               <CFormInput
-                label="Email"
+                label="Correo Electrónico"
                 value={userToEdit.email}
                 onChange={(e) => setUserToEdit({ ...userToEdit, email: e.target.value })}
                 className="mb-2"
+                invalid={!!formErrors.email}
+                feedback={formErrors.email}
               />
               <CFormSelect
                 label="Comunidad"
-                value={userToEdit.comunidad}
-                onChange={(e) => setUserToEdit({ ...userToEdit, comunidad: e.target.value })}
+                value={userToEdit.community_id || ''}
+                onChange={(e) => setUserToEdit({ ...userToEdit, community_id: Number(e.target.value) })}
                 className="mb-2"
+                invalid={!!formErrors.community_id}
+                feedback={formErrors.community_id}
               >
                 <option value="">Seleccione una comunidad</option>
-                {comunidades.map((comunidad, index) => (
-                  <option key={index} value={comunidad}>
-                    {comunidad}
+                {comunidades.map((comunidad) => (
+                  <option key={comunidad.id} value={comunidad.id}>
+                    {comunidad.name}
                   </option>
                 ))}
               </CFormSelect>
               <CFormSelect
                 label="Rol"
-                value={userToEdit.rol}
-                onChange={(e) => setUserToEdit({ ...userToEdit, rol: e.target.value })}
+                value={userToEdit.rol_id || ''}
+                onChange={(e) => setUserToEdit({ ...userToEdit, rol_id: Number(e.target.value) })}
                 className="mb-2"
+                invalid={!!formErrors.rol_id}
+                feedback={formErrors.rol_id}
               >
                 <option value="">Indique el rol que va a desempeñar</option>
-                {roles.map((rol, index) => (
-                  <option key={index} value={rol}>
-                    {rol}
+                {roles.map((rol) => (
+                  <option key={rol.id} value={rol.id}>
+                    {rol.name}
                   </option>
                 ))}
               </CFormSelect>
@@ -340,24 +483,7 @@ const Users = () => {
           )}
         </CModalBody>
         <CModalFooter>
-          <CButton
-            color="primary"
-            onClick={() => {
-              if (
-                userToEdit.nombre &&
-                userToEdit.apellido &&
-                userToEdit.telefono &&
-                userToEdit.email &&
-                userToEdit.comunidad &&
-                userToEdit.rol
-              ) {
-                setUsers(users.map((u) => (u.id === userToEdit.id ? userToEdit : u)))
-                setEditModal(false)
-              } else {
-                alert('Por favor, complete todos los campos.')
-              }
-            }}
-          >
+          <CButton color="primary" onClick={handleSaveEdit}>
             Guardar
           </CButton>
           <CButton color="secondary" onClick={() => setEditModal(false)}>
@@ -375,7 +501,7 @@ const Users = () => {
             <p>
               ¿Estás seguro de que deseas eliminar al usuario{' '}
               <strong>
-                {userToDelete.nombre} {userToDelete.apellido}
+                {userToDelete.first_name} {userToDelete.last_name}
               </strong>
               ?
             </p>
@@ -389,7 +515,7 @@ const Users = () => {
             Cancelar
           </CButton>
         </CModalFooter>
-      </CModal>
+      </CModal>      
     </div>
   )
 }
