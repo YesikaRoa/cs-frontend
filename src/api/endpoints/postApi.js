@@ -7,6 +7,7 @@ const postApi = {
   createPost: (data) => axiosClient.post('/posts', data),
   updatePost: (id, data) => axiosClient.put(`/posts/${id}`, data),
   deletePost: (id) => axiosClient.delete(`/posts/${id}`),
+  changePostStatus: (id, status) => axiosClient.put(`/posts/${id}/status`, { status }),
 }
 
 export default postApi
