@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { jwtDecode } from 'jwt-decode'
+import { getUserRoleFromToken } from '../../utils/auth'
 
 import {
   CButton,
@@ -25,7 +27,7 @@ import {
   CBadge,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
+import { cilPencil, cilTrash, cilInfo, cilUserPlus, cilCheck } from '@coreui/icons'
 import postApi from '../../api/endpoints/postApi'
 import formatDateTime from '../../utils/formatDateTime'
 import AlertMessage from '../../components/ui/AlertMessage'
@@ -55,6 +57,13 @@ const Posts = () => {
   const [isEdit, setIsEdit] = useState(false)
   const [editId, setEditId] = useState(null)
   const [alertData, setAlertData] = useState(null)
+  const [approveModal, setApproveModal] = useState(false)
+  const [approveMessage, setApproveMessage] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [loadingPosts, setLoadingPosts] = useState(false)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const userRole = getUserRoleFromToken()
 
   useEffect(() => {
     fetchPosts()
@@ -62,11 +71,14 @@ const Posts = () => {
   }, [])
 
   const fetchPosts = async () => {
+    setLoadingPosts(true)
     try {
       const res = await postApi.getPosts()
       setPosts(res.data.data || res.data)
     } catch {
       setPosts([])
+    } finally {
+      setLoadingPosts(false)
     }
   }
 
@@ -82,28 +94,38 @@ const Posts = () => {
   const handleChange = (e) => {
     const { id, value, type, files } = e.target
     if (type === 'file' && files.length > 0) {
-      const reader = new FileReader()
-      reader.onload = (ev) => {
-        setForm((prev) => ({
-          ...prev,
-          image: ev.target.result,
-          images: [{ url: ev.target.result }],
-        }))
+      const file = files[0]
+      setImageFile(file)
+      if (file) {
+        setImagePreview(URL.createObjectURL(file))
+      } else {
+        setImagePreview(null)
       }
-      reader.readAsDataURL(files[0])
     } else {
       setForm({ ...form, [id]: value })
     }
   }
 
   const handleEdit = (post) => {
+    let images = []
+    if (Array.isArray(post.images) && post.images.length > 0) {
+      images = post.images.map((img) => (typeof img === 'string' ? { url: img } : img))
+    } else if (post.image) {
+      images = [{ url: post.image }]
+    }
     setForm({
       title: post.title,
       content: post.content,
       category: post.category?.id,
-      image: post.image || '',
+      images,
     })
-
+    if (images.length > 0 && images[0].url) {
+      setImagePreview(images[0].url)
+      setImageFile(null)
+    } else {
+      setImagePreview(null)
+      setImageFile(null)
+    }
     setEditId(post.id)
     setIsEdit(true)
     setVisible(true)
@@ -118,29 +140,46 @@ const Posts = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const newpost = {
-      title: form.title,
-      content: form.content,
-      category_id: Number(form.category),
-      status: 'pending_approval',
-      images: form.images || [],
+    setIsSaving(true)
+    const formData = new FormData()
+    if (imageFile) {
+      formData.append('images', imageFile)
     }
+    formData.append('title', form.title)
+    formData.append('content', form.content)
+    formData.append('category_id', Number(form.category))
 
     try {
       let response
       if (isEdit && editId) {
-        response = await postApi.updatePost(editId, newpost)
+        response = await postApi.updatePost(editId, formData, true)
       } else {
-        response = await postApi.createPost(newpost)
+        response = await postApi.createPost(formData, true)
       }
       setAlertData({ response: response.data, type: 'success' })
       fetchPosts()
       setVisible(false)
       setForm(initialForm)
+      setImageFile(null)
+      setImagePreview(null)
       setIsEdit(false)
       setEditId(null)
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleApprove = async (postId) => {
+    try {
+      const response = await postApi.changePostStatus(postId, 'approved')
+      setApproveMessage('La publicación a sido aprobada')
+      setApproveModal(true)
+      fetchPosts()
+    } catch (error) {
+      setApproveMessage('Error al aprobar la publicación')
+      setApproveModal(true)
     }
   }
 
@@ -158,7 +197,9 @@ const Posts = () => {
         aria-labelledby="OptionalSizesExample1"
       >
         <CModalHeader>
-          <CModalTitle id="OptionalSizesExample1">Crear Publicación</CModalTitle>
+          <CModalTitle id="OptionalSizesExample1">
+            {isEdit ? 'Editar Publicación' : 'Crear Publicación'}
+          </CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CRow>
@@ -210,14 +251,19 @@ const Posts = () => {
                   <h3>Subir Imagen</h3>
                   <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
                   <CFormInput type="file" id="image" accept="image/*" onChange={handleChange} />
+                  {imagePreview && (
+                    <div style={{ marginTop: 10 }}>
+                      <img src={imagePreview} alt="preview" style={{ maxWidth: 350, maxHeight: 350, borderRadius: 8 }} />
+                    </div>
+                  )}
                 </CCardBody>
               </CCard>
             </CCol>
           </CRow>
         </CModalBody>
         <CModalFooter>
-          <CButton color="primary" type="submit" onClick={handleSubmit}>
-            Guardar
+          <CButton color="primary" type="submit" onClick={handleSubmit} disabled={isSaving}>
+            {isSaving ? 'Guardando...' : 'Guardar'}
           </CButton>
           <CButton
             color="secondary"
@@ -227,7 +273,21 @@ const Posts = () => {
               setIsEdit(false)
               setEditId(null)
             }}
+            disabled={isSaving}
           >
+            Cerrar
+          </CButton>
+        </CModalFooter>
+      </CModal>
+      <CModal visible={approveModal} onClose={() => setApproveModal(false)}>
+        <CModalHeader onClose={() => setApproveModal(false)}>
+          <CModalTitle>Aprobar publicación</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {approveMessage}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="primary" onClick={() => setApproveModal(false)}>
             Cerrar
           </CButton>
         </CModalFooter>
@@ -247,64 +307,84 @@ const Posts = () => {
         <CCol>
           <CCard>
             <CCardBody>
-              <CTable hover striped responsive>
-                <CTableHead>
-                  <CTableRow>
-                    <CTableHeaderCell>Título</CTableHeaderCell>
-                    <CTableHeaderCell>Categoria</CTableHeaderCell>
-                    <CTableHeaderCell>Estado</CTableHeaderCell>
-                    <CTableHeaderCell>Publicado por</CTableHeaderCell>
-                    <CTableHeaderCell>Fecha</CTableHeaderCell>
-                    <CTableHeaderCell>Acción</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {posts.map((post) => (
-                    <CTableRow key={post.id}>
-                      <CTableDataCell>{post.title}</CTableDataCell>
-                      <CTableDataCell>{getCategoryNameById(post.category?.id)}</CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge color={post.status === 'published' ? 'success' : 'warning'}>
-                          {post.status === 'published' ? 'Publicado' : 'Pendiente'}
-                        </CBadge>
-                      </CTableDataCell>
-                      <CTableDataCell>{post.user?.first_name || post.user_id}</CTableDataCell>
-                      <CTableDataCell>{formatDateTime(post.created_at)}</CTableDataCell>
-                      <CTableDataCell>
-                        <div className="d-flex">
-                          <CButton
-                            color="primary"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleEdit(post)}
-                          >
-                            <CIcon icon={cilPencil} className="text-white" />
-                          </CButton>
-                          <CButton
-                            color="danger"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleDelete(post.id)}
-                          >
-                            <CIcon icon={cilTrash} className="text-white" />
-                          </CButton>
-                          <CButton
-                            color="info"
-                            size="sm"
-                            onClick={() =>
-                              alert(
-                                `ID: ${post.id}\nTítulo: ${post.title}\nContenido: ${post.content}\nEstado: ${post.status}\nFecha creación: ${post.created_at}\nFecha actualización: ${post.updated_at}\nUsuario: ${post.user.first_name}\nComunidad: ${post.community.name}\nCategoría: ${post.category.name}`,
-                              )
-                            }
-                          >
-                            <CIcon icon={cilInfo} className="text-white" />
-                          </CButton>
-                        </div>
-                      </CTableDataCell>
+              {loadingPosts ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                  <span>Cargando publicaciones...</span>
+                </div>
+              ) : (
+                <CTable hover striped responsive>
+                  <CTableHead>
+                    <CTableRow>
+                      <CTableHeaderCell>Título</CTableHeaderCell>
+                      <CTableHeaderCell>Categoria</CTableHeaderCell>
+                      <CTableHeaderCell>Estado</CTableHeaderCell>
+                      <CTableHeaderCell>Publicado por</CTableHeaderCell>
+                      <CTableHeaderCell>Fecha</CTableHeaderCell>
+                      <CTableHeaderCell>Acción</CTableHeaderCell>
                     </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
+                  </CTableHead>
+                  <CTableBody>
+                    {posts.map((post) => (
+                      <CTableRow key={post.id}>
+                        <CTableDataCell>{post.title}</CTableDataCell>
+                        <CTableDataCell>{getCategoryNameById(post.category?.id)}</CTableDataCell>
+                        <CTableDataCell>
+                          <CBadge color={post.status === 'published' ? 'success' : 'warning'}>
+                            {post.status === 'published' ? 'Publicado' : 'Pendiente'}
+                          </CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell>{post.user?.first_name || post.user_id}</CTableDataCell>
+                        <CTableDataCell>{formatDateTime(post.created_at)}</CTableDataCell>
+                        <CTableDataCell>
+                          <div className="d-flex">
+                            <CButton
+                              color="primary"
+                              size="sm"
+                              className="me-2"
+                              title="Editar publicación"
+                              onClick={() => handleEdit(post)}
+                            >
+                              <CIcon icon={cilPencil} className="text-white" />
+                            </CButton>
+                            <CButton
+                              color="danger"
+                              size="sm"
+                              className="me-2"
+                              title="Eliminar publicación"
+                              onClick={() => handleDelete(post.id)}
+                            >
+                              <CIcon icon={cilTrash} className="text-white" />
+                            </CButton>
+                            <CButton
+                              color="info"
+                              size="sm"
+                              title="Ver información de la publicación"
+                              onClick={() =>
+                                alert(
+                                  `ID: ${post.id}\nTítulo: ${post.title}\nContenido: ${post.content}\nEstado: ${post.status}\nFecha creación: ${post.created_at}\nFecha actualización: ${post.updated_at}\nUsuario: ${post.user_id}\nComunidad: ${post.community_id}\nCategoría: ${post.category_id}`,
+                                )
+                              }
+                            >
+                              <CIcon icon={cilInfo} className="text-white" />
+                            </CButton>
+                            {['Admin', 'Community_Leader'].includes(userRole) && post.status !== 'published' && (
+                              <CButton
+                                color="success"
+                                size="sm"
+                                className="ms-2"
+                                title="Aprobar publicación"
+                                onClick={() => handleApprove(post.id)}
+                              >
+                                <CIcon icon={cilCheck} style={{ color: 'white' }} />
+                              </CButton>
+                            )}
+                          </div>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              )}
             </CCardBody>
           </CCard>
         </CCol>
