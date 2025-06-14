@@ -56,7 +56,6 @@ const Posts = () => {
   const [postToDelete, setPostToDelete] = useState(null)
   const [infoModal, setInfoModal] = useState(false)
   const [selectedPost, setSelectedPost] = useState(null)
-  const [successMessage, setSuccessMessage] = useState('')
   const userRole = getUserRoleFromToken()
 
   useEffect(() => {
@@ -87,9 +86,7 @@ const Posts = () => {
 
   const getCategoryName = (post) => {
     return (
-      postsCategories.find(
-        (cat) => cat.id === (post.category_id || post.category?.id)
-      )?.name ||
+      postsCategories.find((cat) => cat.id === (post.category_id || post.category?.id))?.name ||
       post.category?.name ||
       'No disponible'
     )
@@ -144,17 +141,17 @@ const Posts = () => {
   const confirmDelete = async () => {
     if (!postToDelete) return
     try {
-      await postApi.deletePost(postToDelete.id)
+      let response = await postApi.deletePost(postToDelete.id)
       setPosts(posts.filter((post) => post.id !== postToDelete.id))
       setDeleteModal(false)
       setPostToDelete(null)
-      setSuccessMessage('Publicación eliminada correctamente')
-      setTimeout(() => setSuccessMessage(''), 3000)
-    } catch (err) {
+      setAlertData({ response: response.data, type: 'success' })
+    } catch ({ response }) {
       setAlertData({
-        response: { message: err?.response?.data?.message || 'Error al eliminar publicación' },
+        response: { message: response?.data?.message || 'Error al eliminar publicación' },
         type: 'danger',
       })
+
       setDeleteModal(false)
     }
   }
@@ -206,11 +203,6 @@ const Posts = () => {
 
   return (
     <div className="p-4">
-      {successMessage && (
-        <div className="alert alert-success text-center w-100" role="alert" style={{ maxWidth: 800, margin: '0 auto 16px auto' }}>
-          {successMessage}
-        </div>
-      )}
       <CModal
         size="xl"
         visible={visible}
@@ -337,7 +329,8 @@ const Posts = () => {
                 <strong>Contenido:</strong> {selectedPost.content}
               </li>
               <li>
-                <strong>Estado:</strong> {selectedPost.status === 'published' ? 'Publicado' : 'Pendiente'}
+                <strong>Estado:</strong>{' '}
+                {selectedPost.status === 'published' ? 'Publicado' : 'Pendiente'}
               </li>
               <li>
                 <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)}
@@ -346,7 +339,8 @@ const Posts = () => {
                 <strong>Fecha de actualización:</strong> {formatDateTime(selectedPost.updated_at)}
               </li>
               <li>
-                <strong>Publicado por:</strong> {selectedPost.user?.first_name} {selectedPost.user?.last_name}
+                <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
+                {selectedPost.user?.last_name}
               </li>
               <li>
                 <strong>Comunidad:</strong> {selectedPost.community?.name}
@@ -369,11 +363,7 @@ const Posts = () => {
           <CModalTitle>Confirmar eliminación</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          {postToDelete && (
-            <p>
-              ¿Seguro que deseas eliminar esta publicación?
-            </p>
-          )}
+          {postToDelete && <p>¿Seguro que deseas eliminar esta publicación?</p>}
         </CModalBody>
         <CModalFooter>
           <CButton color="danger" onClick={confirmDelete}>
@@ -394,7 +384,6 @@ const Posts = () => {
           </CButton>
         </CCol>
       </CRow>
-      <CRow></CRow>
       <CRow className="mt-4">
         <CCol>
           <CCard>
