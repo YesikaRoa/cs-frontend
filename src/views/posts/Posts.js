@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { getUserRoleFromToken } from '../../utils/auth'
-
 import {
   CButton,
   CCard,
@@ -24,9 +23,10 @@ import {
   CModalFooter,
   CFormTextarea,
   CBadge,
+  CTooltip,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilInfo, cilUserPlus, cilCheck } from '@coreui/icons'
+import { cilPencil, cilTrash, cilInfo, cilUserPlus, cilCheck, cilPlus } from '@coreui/icons'
 import postApi from '../../api/endpoints/postApi'
 import formatDateTime from '../../utils/formatDateTime'
 import AlertMessage from '../../components/ui/AlertMessage'
@@ -36,16 +36,6 @@ const initialForm = {
   content: '',
   category: '',
   image: '',
-}
-
-const getCategoryNameById = (id) => {
-  const categories = {
-    Proyecto: 1,
-    Evento: 2,
-    Noticia: 3,
-    Anuncio: 4,
-  }
-  return Object.keys(categories).find((key) => categories[key] === id) || ''
 }
 
 const Posts = () => {
@@ -62,6 +52,10 @@ const Posts = () => {
   const [loadingPosts, setLoadingPosts] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
+  const [deleteModal, setDeleteModal] = useState(false)
+  const [postToDelete, setPostToDelete] = useState(null)
+  const [infoModal, setInfoModal] = useState(false)
+  const [selectedPost, setSelectedPost] = useState(null)
   const userRole = getUserRoleFromToken()
 
   useEffect(() => {
@@ -88,6 +82,14 @@ const Posts = () => {
     } catch {
       setPostsCategories([])
     }
+  }
+
+  const getCategoryName = (post) => {
+    return (
+      postsCategories.find((cat) => cat.id === (post.category_id || post.category?.id))?.name ||
+      post.category?.name ||
+      'No disponible'
+    )
   }
 
   const handleChange = (e) => {
@@ -130,10 +132,27 @@ const Posts = () => {
     setVisible(true)
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Seguro que deseas eliminar esta publicación?')) {
-      await postApi.deletePost(id)
-      fetchPosts()
+  // MODAL DE ELIMINAR
+  const handleDeleteClick = (post) => {
+    setPostToDelete(post)
+    setDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!postToDelete) return
+    try {
+      let response = await postApi.deletePost(postToDelete.id)
+      setPosts(posts.filter((post) => post.id !== postToDelete.id))
+      setDeleteModal(false)
+      setPostToDelete(null)
+      setAlertData({ response: response.data, type: 'success' })
+    } catch ({ response }) {
+      setAlertData({
+        response: { message: response?.data?.message || 'Error al eliminar publicación' },
+        type: 'danger',
+      })
+
+      setDeleteModal(false)
     }
   }
 
@@ -293,17 +312,85 @@ const Posts = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+      <CModal visible={infoModal} onClose={() => setInfoModal(false)}>
+        <CModalHeader onClose={() => setInfoModal(false)}>
+          <CModalTitle>Información de la Publicación</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {selectedPost && (
+            <div>
+              <ul>
+                <li>
+                  <strong>ID:</strong> {selectedPost.id}
+                </li>
+                <li>
+                  <strong>Título:</strong> {selectedPost.title}
+                </li>
+                <li>
+                  <strong>Contenido:</strong> {selectedPost.content}
+                </li>
+                <li>
+                  <strong>Estado:</strong>{' '}
+                  {selectedPost.status === 'published' ? 'Publicado' : 'Pendiente'}
+                </li>
+                <li>
+                  <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)}
+                </li>
+                <li>
+                  <strong>Fecha de actualización:</strong> {formatDateTime(selectedPost.updated_at)}
+                </li>
+                <li>
+                  <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
+                  {selectedPost.user?.last_name}
+                </li>
+                <li>
+                  <strong>Comunidad:</strong> {selectedPost.community?.name}
+                </li>
+                <li>
+                  <strong>Categoría:</strong> {getCategoryName(selectedPost)}
+                </li>
+              </ul>
+              <img
+                src={selectedPost.image || selectedPost.images?.[0]?.url}
+                alt="Imagen de la publicación"
+                style={{ maxWidth: '100%', borderRadius: 8, margin: 'auto', display: 'flex' }}
+              />
+            </div>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setInfoModal(false)}>
+            Cerrar
+          </CButton>
+        </CModalFooter>
+      </CModal>
+      {/* Modal de confirmación de eliminación */}
+      <CModal visible={deleteModal} onClose={() => setDeleteModal(false)}>
+        <CModalHeader onClose={() => setDeleteModal(false)}>
+          <CModalTitle>Confirmar eliminación</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {postToDelete && <p>¿Seguro que deseas eliminar esta publicación?</p>}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="danger" onClick={confirmDelete}>
+            Eliminar
+          </CButton>
+          <CButton color="secondary" onClick={() => setDeleteModal(false)}>
+            Cancelar
+          </CButton>
+        </CModalFooter>
+      </CModal>
       <CRow>
         <CCol>
           <h3>Publicaciones</h3>
         </CCol>
         <CCol className="text-end">
           <CButton color="primary" onClick={() => setVisible(!visible)}>
-            <CIcon icon={cilUserPlus} /> Crear Publicación
+            <CIcon icon={cilPlus} /> Crear Publicación
           </CButton>
         </CCol>
       </CRow>
-      <CRow></CRow>
       <CRow className="mt-4">
         <CCol>
           <CCard>
@@ -328,7 +415,7 @@ const Posts = () => {
                     {posts.map((post) => (
                       <CTableRow key={post.id}>
                         <CTableDataCell>{post.title}</CTableDataCell>
-                        <CTableDataCell>{getCategoryNameById(post.category?.id)}</CTableDataCell>
+                        <CTableDataCell>{getCategoryName(post)}</CTableDataCell>
                         <CTableDataCell>
                           <CBadge color={post.status === 'published' ? 'success' : 'warning'}>
                             {post.status === 'published' ? 'Publicado' : 'Pendiente'}
@@ -342,7 +429,6 @@ const Posts = () => {
                               color="primary"
                               size="sm"
                               className="me-2"
-                              title="Editar publicación"
                               onClick={() => handleEdit(post)}
                             >
                               <CIcon icon={cilPencil} className="text-white" />
@@ -351,20 +437,17 @@ const Posts = () => {
                               color="danger"
                               size="sm"
                               className="me-2"
-                              title="Eliminar publicación"
-                              onClick={() => handleDelete(post.id)}
+                              onClick={() => handleDeleteClick(post)}
                             >
                               <CIcon icon={cilTrash} className="text-white" />
                             </CButton>
                             <CButton
                               color="info"
                               size="sm"
-                              title="Ver información de la publicación"
-                              onClick={() =>
-                                alert(
-                                  `ID: ${post.id}\nTítulo: ${post.title}\nContenido: ${post.content}\nEstado: ${post.status}\nFecha creación: ${post.created_at}\nFecha actualización: ${post.updated_at}\nUsuario: ${post.user_id}\nComunidad: ${post.community_id}\nCategoría: ${post.category_id}`,
-                                )
-                              }
+                              onClick={() => {
+                                setSelectedPost(post)
+                                setInfoModal(true)
+                              }}
                             >
                               <CIcon icon={cilInfo} className="text-white" />
                             </CButton>
@@ -374,7 +457,6 @@ const Posts = () => {
                                   color="success"
                                   size="sm"
                                   className="ms-2"
-                                  title="Aprobar publicación"
                                   onClick={() => handleApprove(post.id)}
                                 >
                                   <CIcon icon={cilCheck} style={{ color: 'white' }} />
