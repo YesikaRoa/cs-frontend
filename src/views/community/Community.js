@@ -70,7 +70,7 @@ const Community = () => {
   }
   return (
     <>
-      <CTabs activeItemKey={'about'}>
+      <CTabs activeItemKey={'testimonies'}>
         <CTabList variant="tabs" className="component-space">
           <CTab itemKey="about">Nosotros</CTab>
           <CTab itemKey="testimonies">Testimonios</CTab>
