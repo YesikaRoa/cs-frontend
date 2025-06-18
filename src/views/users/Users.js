@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import userApi from '../../api/endpoints/userApi'
 import {
   CCard,
   CCardBody,
@@ -23,9 +22,12 @@ import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
 import { z } from 'zod'
 import AlertMessage from '../../components/ui/AlertMessage'
+import userApi from '../../api/endpoints/userApi'
+import communityApi from '../../api/endpoints/communityApi'
 
 const Users = () => {
   const [users, setUsers] = useState([])
+  const [communities, setCommunities] = useState([])
   const [selectedUser, setSelectedUser] = useState(null)
   const [viewModal, setViewModal] = useState(false)
   const [addModal, setAddModal] = useState(false)
@@ -34,14 +36,6 @@ const Users = () => {
   const [userToDelete, setUserToDelete] = useState(null)
   const [userToEdit, setUserToEdit] = useState(null)
   const [alertData, setAlertData] = useState(null)
-
-  const comunidades = [
-    { id: 1, name: 'Rafael Urdaneta' },
-    { id: 2, name: 'Libertador Cineral' },
-    { id: 3, name: 'Lote H Rio Zuniga' },
-    { id: 4, name: 'Libertador' },
-    { id: 5, name: 'Lote G Pirineos I' },
-  ]
 
   const roles = [
     { id: 1, name: 'Admin' },
@@ -147,7 +141,6 @@ const Users = () => {
 
   const handleSaveEdit = async () => {
     // Validar con zod (sin password)
-    console.log(userToEdit)
     const result = userSchema.omit({ password: true }).safeParse(userToEdit)
     if (!result.success) {
       const errors = {}
@@ -185,8 +178,14 @@ const Users = () => {
       .catch(({ response }) => setAlertData({ response: response.data, type: 'danger' }))
   }
 
+  const fetchCommunities = async () => {
+    const { data } = await communityApi.getAllCommunities()
+    setCommunities(data.data)
+  }
+
   useEffect(() => {
     fetchData()
+    fetchCommunities()
   }, [])
 
   return (
@@ -218,7 +217,7 @@ const Users = () => {
                   <CTableDataCell>{user?.phone || 'No disponible'} </CTableDataCell>
                   <CTableDataCell>{user.email}</CTableDataCell>
                   <CTableDataCell>
-                    {comunidades.find((c) => c.id === (user.community_id || user.community?.id))
+                    {communities.find((c) => c.id === (user.community_id || user.community?.id))
                       ?.name ||
                       user.community?.name ||
                       'No disponible'}
@@ -279,7 +278,7 @@ const Users = () => {
               </li>
               <li>
                 <strong>Comunidad:</strong>{' '}
-                {comunidades.find(
+                {communities.find(
                   (c) => c.id === (selectedUser.community_id || selectedUser.community?.id),
                 )?.name ||
                   selectedUser.community?.name ||
@@ -363,7 +362,7 @@ const Users = () => {
               feedback={formErrors.community_id}
             >
               <option value="">Seleccione una comunidad</option>
-              {comunidades.map((comunidad) => (
+              {communities.map((comunidad) => (
                 <option key={comunidad.id} value={comunidad.id}>
                   {comunidad.name}
                 </option>
@@ -447,7 +446,7 @@ const Users = () => {
                 feedback={formErrors.community_id}
               >
                 <option value="">Seleccione una comunidad</option>
-                {comunidades.map((comunidad) => (
+                {communities.map((comunidad) => (
                   <option key={comunidad.id} value={comunidad.id}>
                     {comunidad.name}
                   </option>
