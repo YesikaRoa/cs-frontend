@@ -22,10 +22,10 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
 import { z } from 'zod'
+import AlertMessage from '../../components/ui/AlertMessage'
 
 const Users = () => {
   const [users, setUsers] = useState([])
-
   const [selectedUser, setSelectedUser] = useState(null)
   const [viewModal, setViewModal] = useState(false)
   const [addModal, setAddModal] = useState(false)
@@ -33,9 +33,7 @@ const Users = () => {
   const [deleteModal, setDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
   const [userToEdit, setUserToEdit] = useState(null)
-  const [showWarning, setShowWarning] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
+  const [alertData, setAlertData] = useState(null)
 
   const comunidades = [
     { id: 1, name: 'Rafael Urdaneta' },
@@ -51,11 +49,10 @@ const Users = () => {
     { id: 3, name: 'Lider de calle' },
   ]
 
-
   const userSchema = z.object({
     first_name: z.string().min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres'),
     last_name: z.string().min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres'),
-    phone: z.string().min(11, 'El teléfono es obligatorio y debe tener al menos 10 caracteres'),
+    phone: z.string().min(10, 'El teléfono es obligatorio y debe tener al menos 10 caracteres'),
     email: z.string().email('Debe ser un correo electrónico válido'),
     password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
     community_id: z.string().min(1, 'Debe seleccionar una comunidad'),
@@ -81,15 +78,14 @@ const Users = () => {
   }
 
   const handleAddUser = async () => {
-    // Esto es para validar con zod 
+    // Esto es para validar con zod
     const result = userSchema.safeParse(newUser)
     if (!result.success) {
       const errors = {}
-      result.error.errors.forEach(err => {
+      result.error.errors.forEach((err) => {
         errors[err.path[0]] = err.message
       })
       setFormErrors(errors)
-      setShowWarning(true)
       return
     }
     setFormErrors({})
@@ -100,8 +96,8 @@ const Users = () => {
         rol_id: Number(newUser.rol_id),
         is_active: true,
       }
-      const res = await userApi.createUser(payload)
-      setUsers([...users, res.data.data || res.data])
+      const response = await userApi.createUser(payload)
+
       setNewUser({
         first_name: '',
         last_name: '',
@@ -113,11 +109,10 @@ const Users = () => {
         is_active: true,
       })
       setAddModal(false)
-      setSuccessMessage('Usuario añadido exitosamente')
-      setShowSuccess(true)
-    } catch (err) {
-      alert('Error al guardar usuario: ' + (err.response?.data?.message || JSON.stringify(err.response?.data) || err.message))
-      console.error(err.response?.data || err)
+      fetchData()
+      setAlertData({ response: response.data, type: 'success' })
+    } catch ({ response }) {
+      setAlertData({ response: response.data, type: 'danger' })
     }
   }
 
@@ -130,15 +125,13 @@ const Users = () => {
   const confirmDelete = async () => {
     if (!userToDelete) return
     try {
-      await userApi.deleteUser(userToDelete.id)
+      const response = await userApi.deleteUser(userToDelete.id)
       setUsers(users.filter((user) => user.id !== userToDelete.id))
       setDeleteModal(false)
       setUserToDelete(null)
-      setSuccessMessage('Usuario eliminado correctamente')
-      setTimeout(() => setSuccessMessage(''), 3000)
-    } catch (err) {
-      alert('Error al eliminar usuario')
-      console.error(err)
+      setAlertData({ response: response.data, type: 'success' })
+    } catch ({ response }) {
+      setAlertData({ response: response.data, type: 'danger' })
     }
   }
 
@@ -154,14 +147,14 @@ const Users = () => {
 
   const handleSaveEdit = async () => {
     // Validar con zod (sin password)
+    console.log(userToEdit)
     const result = userSchema.omit({ password: true }).safeParse(userToEdit)
     if (!result.success) {
       const errors = {}
-      result.error.errors.forEach(err => {
+      result.error.errors.forEach((err) => {
         errors[err.path[0]] = err.message
       })
       setFormErrors(errors)
-      setShowWarning(true)
       return
     }
     setFormErrors({})
@@ -179,28 +172,25 @@ const Users = () => {
       setUsers(users.map((u) => (u.id === userToEdit.id ? { ...u, ...payload } : u)))
       setEditModal(false)
       setUserToEdit(null)
-      setSuccessMessage('Perfil editado correctamente')
-      setShowSuccess(true)
-    } catch (err) {
-      alert('Error al editar usuario')
-      console.error(err)
+      setAlertData({ type: 'success', message: 'Perfil editado correctamente' })
+    } catch ({ response }) {
+      setAlertData({ response: response.data, type: 'danger' })
     }
   }
 
-  useEffect(() => {
+  const fetchData = async () => {
     userApi
       .getUsers()
       .then((res) => setUsers(res.data.data))
-      .catch((err) => setError('Error al cargar usuarios'))
+      .catch(({ response }) => setAlertData({ response: response.data, type: 'danger' }))
+  }
+
+  useEffect(() => {
+    fetchData()
   }, [])
 
   return (
     <div className="p-3">
-      {successMessage && (
-        <div className="alert alert-success text-center w-100" role="alert" style={{ maxWidth: 800, margin: '0 auto 16px auto' }}>
-          {successMessage}
-        </div>
-      )}
       <div className="d-flex justify-content-end mb-3">
         <CButton color="primary" onClick={() => setAddModal(true)}>
           <CIcon icon={cilUserPlus} /> Crear Usuario
@@ -225,21 +215,18 @@ const Users = () => {
                 <CTableRow key={user.id}>
                   <CTableDataCell>{user.first_name}</CTableDataCell>
                   <CTableDataCell>{user.last_name}</CTableDataCell>
-                  <CTableDataCell>{user?.phone || "No disponible"} </CTableDataCell>
+                  <CTableDataCell>{user?.phone || 'No disponible'} </CTableDataCell>
                   <CTableDataCell>{user.email}</CTableDataCell>
                   <CTableDataCell>
-                    {
-                      comunidades.find(c => c.id === (user.community_id || user.community?.id))?.name ||
+                    {comunidades.find((c) => c.id === (user.community_id || user.community?.id))
+                      ?.name ||
                       user.community?.name ||
-                      'No disponible'
-                    }
+                      'No disponible'}
                   </CTableDataCell>
                   <CTableDataCell>
-                    {
-                      roles.find(r => r.id === (user.rol_id || user.role?.id))?.name ||
+                    {roles.find((r) => r.id === (user.rol_id || user.role?.id))?.name ||
                       user.role?.name ||
-                      'No disponible'
-                    }
+                      'No disponible'}
                   </CTableDataCell>
                   <CTableDataCell>
                     <div className="d-flex">
@@ -285,24 +272,24 @@ const Users = () => {
                 <strong>Apellido:</strong> {selectedUser.last_name}
               </li>
               <li>
-                <strong>Teléfono:</strong> {selectedUser.phone || 'No disponible'} 
+                <strong>Teléfono:</strong> {selectedUser.phone || 'No disponible'}
               </li>
               <li>
                 <strong>Correo Electrónico:</strong> {selectedUser.email}
               </li>
               <li>
-                <strong>Comunidad:</strong> {
-                  comunidades.find(c => c.id === (selectedUser.community_id || selectedUser.community?.id))?.name ||
+                <strong>Comunidad:</strong>{' '}
+                {comunidades.find(
+                  (c) => c.id === (selectedUser.community_id || selectedUser.community?.id),
+                )?.name ||
                   selectedUser.community?.name ||
-                  'No disponible'
-                }
+                  'No disponible'}
               </li>
               <li>
-                <strong>Rol:</strong> {
-                  roles.find(r => r.id === (selectedUser.rol_id || selectedUser.role?.id))?.name ||
+                <strong>Rol:</strong>{' '}
+                {roles.find((r) => r.id === (selectedUser.rol_id || selectedUser.role?.id))?.name ||
                   selectedUser.role?.name ||
-                  'No disponible'
-                }
+                  'No disponible'}
               </li>
             </ul>
           )}
@@ -452,7 +439,9 @@ const Users = () => {
               <CFormSelect
                 label="Comunidad"
                 value={userToEdit.community_id || ''}
-                onChange={(e) => setUserToEdit({ ...userToEdit, community_id: Number(e.target.value) })}
+                onChange={(e) =>
+                  setUserToEdit({ ...userToEdit, community_id: Number(e.target.value) })
+                }
                 className="mb-2"
                 invalid={!!formErrors.community_id}
                 feedback={formErrors.community_id}
@@ -515,7 +504,15 @@ const Users = () => {
             Cancelar
           </CButton>
         </CModalFooter>
-      </CModal>      
+      </CModal>
+
+      {alertData && (
+        <AlertMessage
+          response={alertData.response}
+          type={alertData.type}
+          onClose={() => setAlertData(null)}
+        />
+      )}
     </div>
   )
 }
