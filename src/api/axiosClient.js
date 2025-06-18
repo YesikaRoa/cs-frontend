@@ -7,13 +7,23 @@ const axiosClient = axios.create({
   },
 })
 
-// Interceptor para agregar el token automáticamente
+// Interceptor para agregar token y manejar Content-Type dinámicamente
 axiosClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
+    // Detecta si el cuerpo de la solicitud es FormData
+    if (config.data instanceof FormData) {
+      // No seteamos Content-Type, Axios lo manejará
+      delete config.headers['Content-Type']
+    } else {
+      // Establece JSON por defecto si no es FormData
+      config.headers['Content-Type'] = 'application/json'
+    }
+
     return config
   },
   (error) => {
@@ -21,7 +31,7 @@ axiosClient.interceptors.request.use(
   },
 )
 
-// Interceptor de respuesta para manejar cualquier 401
+// Interceptor de respuesta para manejar errores 401
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
