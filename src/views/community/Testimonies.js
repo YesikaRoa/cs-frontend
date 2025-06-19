@@ -1,53 +1,290 @@
+import { useState, useEffect } from 'react'
 import {
   CButton,
   CCol,
   CRow,
+  CCard,
+  CCardBody,
   CTable,
   CTableHead,
   CTableRow,
   CTableHeaderCell,
   CTableBody,
   CTableDataCell,
+  CModal,
+  CModalBody,
+  CModalHeader,
+  CModalTitle,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormTextarea,
+  CFormSelect,
 } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilPlus } from '@coreui/icons'
+import testimoniesApi from '../../api/endpoints/testimoniesApi'
+import communityApi from '../../api/endpoints/communityApi'
+import AlertMessage from '../../components/ui/AlertMessage'
+import formatDateTime from '../../utils/formatDateTime'
+
+const initialForm = {
+  name: '',
+  comment: '',
+  community_id: '',
+}
 
 const Testimonies = () => {
+  const [testimonies, setTestimonies] = useState([])
+  const [communities, setCommunities] = useState([])
+  const [visible, setVisible] = useState(false)
+  const [form, setForm] = useState(initialForm)
+  const [isEdit, setIsEdit] = useState(false)
+  const [editId, setEditId] = useState(null)
+  const [alertData, setAlertData] = useState(null)
+  const [deleteModal, setDeleteModal] = useState(false)
+  const [testimonyToDelete, setTestimonyToDelete] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    fetchTestimonies()
+    fetchCommunities()
+  }, [])
+
+  const fetchTestimonies = async () => {
+    setLoading(true)
+    try {
+      const res = await testimoniesApi.getTestimonies()
+      setTestimonies(res.data.data || res.data)
+    } catch {
+      setTestimonies([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchCommunities = async () => {
+    const { data } = await communityApi.getAllCommunities()
+    setCommunities(data.data)
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setForm({
+      ...form,
+      [name]: name === 'community_id' ? Number(value) : value,
+    })
+  }
+
+  const handleEdit = (testimony) => {
+    setForm({
+      name: testimony.name,
+      comment: testimony.comment,
+      community_id: testimony.community?.id || testimony.community_id || '',
+    })
+    setEditId(testimony.id)
+    setIsEdit(true)
+    setVisible(true)
+  }
+
+  const handleDeleteClick = (testimony) => {
+    setTestimonyToDelete(testimony)
+    setDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!testimonyToDelete) return
+    try {
+      let response = await testimoniesApi.deleteTestimony(testimonyToDelete.id)
+      setTestimonies(testimonies.filter((t) => t.id !== testimonyToDelete.id))
+      setDeleteModal(false)
+      setTestimonyToDelete(null)
+      setAlertData({ response: response.data, type: 'success' })
+    } catch ({ response }) {
+      setAlertData({
+        response: { message: response?.data?.message || 'Error al eliminar testimonio' },
+        type: 'danger',
+      })
+      setDeleteModal(false)
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      let response
+      if (isEdit && editId) {
+        response = await testimoniesApi.updateTestimony(editId, form)
+      } else {
+        response = await testimoniesApi.createTestimony(form)
+      }
+      setAlertData({ response: response.data, type: 'success' })
+      fetchTestimonies()
+      setVisible(false)
+      setForm(initialForm)
+      setIsEdit(false)
+      setEditId(null)
+    } catch (error) {
+      setAlertData({ response: error.response?.data || { message: 'Error' }, type: 'danger' })
+    }
+  }
+
   return (
-    <>
-      <CRow className="mt-4">
+    <div className="p-4">
+      <CModal
+        visible={visible}
+        onClose={() => {
+          setVisible(false)
+          setForm(initialForm)
+          setIsEdit(false)
+          setEditId(null)
+        }}
+      >
+        <CModalHeader>
+          <CModalTitle>{isEdit ? 'Editar Testimonio' : 'Agregar Testimonio'}</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <CForm onSubmit={handleSubmit}>
+            <CFormInput
+              label="Nombre"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              className="mb-2"
+              required
+            />
+            <CFormTextarea
+              label="Comentario"
+              name="comment"
+              value={form.comment}
+              onChange={handleChange}
+              className="mb-2"
+              required
+            />
+            <CFormSelect
+              label="Comunidad"
+              name="community_id"
+              value={form.community_id}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Seleccione una comunidad</option>
+              {communities.map((comunidad) => (
+                <option key={comunidad.id} value={comunidad.id}>
+                  {comunidad.name}
+                </option>
+              ))}
+            </CFormSelect>
+          </CForm>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="primary" onClick={handleSubmit}>
+            Guardar
+          </CButton>
+          <CButton color="secondary" onClick={() => setVisible(false)}>
+            Cancelar
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={deleteModal} onClose={() => setDeleteModal(false)}>
+        <CModalHeader>
+          <CModalTitle>Confirmar eliminación</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {testimonyToDelete && (
+            <p>
+              ¿Seguro que deseas eliminar el testimonio de <strong>{testimonyToDelete.name}</strong>
+              ?
+            </p>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="danger" onClick={confirmDelete}>
+            Eliminar
+          </CButton>
+          <CButton color="secondary" onClick={() => setDeleteModal(false)}>
+            Cancelar
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CRow>
         <CCol className="text-end mb-3">
-          <CButton color="primary">Agregar Testimonio</CButton>
+          <CButton color="primary" onClick={() => setVisible(true)}>
+            <CIcon icon={cilPlus} /> Agregar Testimonio
+          </CButton>
         </CCol>
       </CRow>
-      <CRow>
-        <CCol>
-          <CTable hover striped responsive>
+
+      <CCard>
+        <CCardBody>
+          <CTable striped hover responsive>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell>Testimonio</CTableHeaderCell>
-                <CTableHeaderCell>Estado</CTableHeaderCell>
-                <CTableHeaderCell>Responsable</CTableHeaderCell>
-                <CTableHeaderCell>Acción</CTableHeaderCell>
+                <CTableHeaderCell>Nombre</CTableHeaderCell>
+                <CTableHeaderCell>Comentario</CTableHeaderCell>
+                <CTableHeaderCell>Comunidad</CTableHeaderCell>
+                <CTableHeaderCell>Fecha de Creación</CTableHeaderCell>
+                <CTableHeaderCell>Acciones</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              <CTableRow>
-                <CTableDataCell>Contenido del testimonio</CTableDataCell>
-                <CTableDataCell>Activo</CTableDataCell>
-                <CTableDataCell>Responsable 1</CTableDataCell>
-                <CTableDataCell>
-                  <CButton color="danger" size="sm" className="me-2">
-                    Eliminar
-                  </CButton>
-                  <CButton color="warning" size="sm">
-                    Modificar
-                  </CButton>
-                </CTableDataCell>
-              </CTableRow>
+              {loading ? (
+                <CTableRow>
+                  <CTableDataCell colSpan={4} className="text-center">
+                    Cargando testimonios...
+                  </CTableDataCell>
+                </CTableRow>
+              ) : testimonies.length === 0 ? (
+                <CTableRow>
+                  <CTableDataCell colSpan={4} className="text-center">
+                    No hay testimonios registrados.
+                  </CTableDataCell>
+                </CTableRow>
+              ) : (
+                testimonies.map((t) => (
+                  <CTableRow key={t.id}>
+                    <CTableDataCell>{t.name}</CTableDataCell>
+                    <CTableDataCell>{t.comment}</CTableDataCell>
+                    <CTableDataCell>{t.community?.name}</CTableDataCell>
+                    <CTableDataCell>{formatDateTime(t.created_at)}</CTableDataCell>
+                    <CTableDataCell>
+                      <div className="d-flex">
+                        <CButton
+                          color="primary"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => handleEdit(t)}
+                        >
+                          <CIcon icon={cilPencil} className="text-white" />
+                        </CButton>
+                        <CButton
+                          color="danger"
+                          size="sm"
+                          className="me-2"
+                          onClick={() => handleDeleteClick(t)}
+                        >
+                          <CIcon icon={cilTrash} className="text-white" />
+                        </CButton>
+                      </div>
+                    </CTableDataCell>
+                  </CTableRow>
+                ))
+              )}
             </CTableBody>
           </CTable>
-        </CCol>
-      </CRow>
-    </>
+        </CCardBody>
+      </CCard>
+
+      {alertData && (
+        <AlertMessage
+          response={alertData.response}
+          type={alertData.type}
+          onClose={() => setAlertData(null)}
+        />
+      )}
+    </div>
   )
 }
 
