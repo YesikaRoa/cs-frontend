@@ -130,7 +130,7 @@ const Users = () => {
   }
 
   const handleSaveEdit = async () => {
-    // Validar con zod (sin password)
+    // Solo usa la validación de Zod
     const result = updateUserSchema.omit({ password: true }).safeParse(userToEdit)
     if (!result.success) {
       const errors = {}
@@ -155,7 +155,7 @@ const Users = () => {
       setUsers(users.map((u) => (u.id === userToEdit.id ? { ...u, ...payload } : u)))
       setEditModal(false)
       setUserToEdit(null)
-      setAlertData({ type: 'success', message: 'Perfil editado correctamente' })
+      setAlertData({ response: { message: 'Perfil editado correctamente' }, type: 'success' })
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -290,7 +290,10 @@ const Users = () => {
         </CModalFooter>
       </CModal>
 
-      <CModal visible={addModal} onClose={() => setAddModal(false)}>
+      <CModal visible={addModal} onClose={() => {
+  setAddModal(false)
+  setFormErrors({})
+}}>
         <CModalHeader onClose={() => setAddModal(false)}>
           <CModalTitle>Añadir nuevo usuario</CModalTitle>
         </CModalHeader>
