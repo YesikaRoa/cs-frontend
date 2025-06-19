@@ -22,18 +22,11 @@ import {
   CFormSelect,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilInfo, cilPlus } from '@coreui/icons'
+import { cilPencil, cilTrash, cilPlus } from '@coreui/icons'
 import testimoniesApi from '../../api/endpoints/testimoniesApi'
+import communityApi from '../../api/endpoints/communityApi'
 import AlertMessage from '../../components/ui/AlertMessage'
 import formatDateTime from '../../utils/formatDateTime'
-
-const comunidades = [
-  { id: 1, name: 'Lote G Pirineos I' },
-  { id: 2, name: 'Lote H Rio zuñiga' },
-  { id: 3, name: 'Libertador Cineral' },
-  { id: 4, name: 'Rafael Urdaneta' },
-  { id: 5, name: 'Libertador' },
-]
 
 const initialForm = {
   name: '',
@@ -43,6 +36,7 @@ const initialForm = {
 
 const Testimonies = () => {
   const [testimonies, setTestimonies] = useState([])
+  const [communities, setCommunities] = useState([])
   const [visible, setVisible] = useState(false)
   const [form, setForm] = useState(initialForm)
   const [isEdit, setIsEdit] = useState(false)
@@ -50,12 +44,11 @@ const Testimonies = () => {
   const [alertData, setAlertData] = useState(null)
   const [deleteModal, setDeleteModal] = useState(false)
   const [testimonyToDelete, setTestimonyToDelete] = useState(null)
-  const [infoModal, setInfoModal] = useState(false)
-  const [selectedTestimony, setSelectedTestimony] = useState(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     fetchTestimonies()
+    fetchCommunities()
   }, [])
 
   const fetchTestimonies = async () => {
@@ -68,6 +61,11 @@ const Testimonies = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchCommunities = async () => {
+    const { data } = await communityApi.getAllCommunities()
+    setCommunities(data.data)
   }
 
   const handleChange = (e) => {
@@ -120,7 +118,7 @@ const Testimonies = () => {
       } else {
         response = await testimoniesApi.createTestimony(form)
       }
-      setAlertData({ response: response.data, type: 'success' }) 
+      setAlertData({ response: response.data, type: 'success' })
       fetchTestimonies()
       setVisible(false)
       setForm(initialForm)
@@ -129,11 +127,6 @@ const Testimonies = () => {
     } catch (error) {
       setAlertData({ response: error.response?.data || { message: 'Error' }, type: 'danger' })
     }
-  }
-
-  const handleView = (testimony) => {
-    setSelectedTestimony(testimony)
-    setInfoModal(true)
   }
 
   return (
@@ -176,7 +169,7 @@ const Testimonies = () => {
               required
             >
               <option value="">Seleccione una comunidad</option>
-              {comunidades.map((comunidad) => (
+              {communities.map((comunidad) => (
                 <option key={comunidad.id} value={comunidad.id}>
                   {comunidad.name}
                 </option>
@@ -201,8 +194,8 @@ const Testimonies = () => {
         <CModalBody>
           {testimonyToDelete && (
             <p>
-              ¿Seguro que deseas eliminar el testimonio de{' '}
-              <strong>{testimonyToDelete.name}</strong>?
+              ¿Seguro que deseas eliminar el testimonio de <strong>{testimonyToDelete.name}</strong>
+              ?
             </p>
           )}
         </CModalBody>
@@ -212,38 +205,6 @@ const Testimonies = () => {
           </CButton>
           <CButton color="secondary" onClick={() => setDeleteModal(false)}>
             Cancelar
-          </CButton>
-        </CModalFooter>
-      </CModal>
-
-      <CModal visible={infoModal} onClose={() => setInfoModal(false)}>
-        <CModalHeader>
-          <CModalTitle>Información del Testimonio</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          {selectedTestimony && (
-            <ul>
-              <li>
-                <strong>ID:</strong> {selectedTestimony.id}
-              </li>
-              <li>
-                <strong>Nombre:</strong> {selectedTestimony.name}
-              </li>
-              <li>
-                <strong>Comentario:</strong> {selectedTestimony.comment}
-              </li>
-              <li>
-                <strong>Fecha de Creación: </strong>{formatDateTime(selectedTestimony.created_at)}
-              </li>
-              <li>
-                <strong>Comunidad:</strong> {selectedTestimony.community?.name}
-              </li>
-            </ul>
-          )}
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={() => setInfoModal(false)}>
-            Cerrar
           </CButton>
         </CModalFooter>
       </CModal>
@@ -264,6 +225,7 @@ const Testimonies = () => {
                 <CTableHeaderCell>Nombre</CTableHeaderCell>
                 <CTableHeaderCell>Comentario</CTableHeaderCell>
                 <CTableHeaderCell>Comunidad</CTableHeaderCell>
+                <CTableHeaderCell>Fecha de Creación</CTableHeaderCell>
                 <CTableHeaderCell>Acciones</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
@@ -286,6 +248,7 @@ const Testimonies = () => {
                     <CTableDataCell>{t.name}</CTableDataCell>
                     <CTableDataCell>{t.comment}</CTableDataCell>
                     <CTableDataCell>{t.community?.name}</CTableDataCell>
+                    <CTableDataCell>{formatDateTime(t.created_at)}</CTableDataCell>
                     <CTableDataCell>
                       <div className="d-flex">
                         <CButton
@@ -303,13 +266,6 @@ const Testimonies = () => {
                           onClick={() => handleDeleteClick(t)}
                         >
                           <CIcon icon={cilTrash} className="text-white" />
-                        </CButton>
-                        <CButton
-                          color="info"
-                          size="sm"
-                          onClick={() => handleView(t)}
-                        >
-                          <CIcon icon={cilInfo} className="text-white" />
                         </CButton>
                       </div>
                     </CTableDataCell>
