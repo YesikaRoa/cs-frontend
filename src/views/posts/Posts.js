@@ -318,37 +318,44 @@ const Posts = () => {
         </CModalHeader>
         <CModalBody>
           {selectedPost && (
-            <ul>
-              <li>
-                <strong>ID:</strong> {selectedPost.id}
-              </li>
-              <li>
-                <strong>Título:</strong> {selectedPost.title}
-              </li>
-              <li>
-                <strong>Contenido:</strong> {selectedPost.content}
-              </li>
-              <li>
-                <strong>Estado:</strong>{' '}
-                {selectedPost.status === 'published' ? 'Publicado' : 'Pendiente'}
-              </li>
-              <li>
-                <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)}
-              </li>
-              <li>
-                <strong>Fecha de actualización:</strong> {formatDateTime(selectedPost.updated_at)}
-              </li>
-              <li>
-                <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
-                {selectedPost.user?.last_name}
-              </li>
-              <li>
-                <strong>Comunidad:</strong> {selectedPost.community?.name}
-              </li>
-              <li>
-                <strong>Categoría:</strong> {getCategoryName(selectedPost)}
-              </li>
-            </ul>
+            <div>
+              <ul>
+                <li>
+                  <strong>ID:</strong> {selectedPost.id}
+                </li>
+                <li>
+                  <strong>Título:</strong> {selectedPost.title}
+                </li>
+                <li>
+                  <strong>Contenido:</strong> {selectedPost.content}
+                </li>
+                <li>
+                  <strong>Estado:</strong>{' '}
+                  {selectedPost.status === 'published' ? 'Publicado' : 'Pendiente'}
+                </li>
+                <li>
+                  <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)}
+                </li>
+                <li>
+                  <strong>Fecha de actualización:</strong> {formatDateTime(selectedPost.updated_at)}
+                </li>
+                <li>
+                  <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
+                  {selectedPost.user?.last_name}
+                </li>
+                <li>
+                  <strong>Comunidad:</strong> {selectedPost.community?.name}
+                </li>
+                <li>
+                  <strong>Categoría:</strong> {getCategoryName(selectedPost)}
+                </li>
+              </ul>
+              <img
+                src={selectedPost.image || selectedPost.images?.[0]?.url}
+                alt="Imagen de la publicación"
+                style={{ maxWidth: '100%', borderRadius: 8, margin: 'auto', display: 'flex' }}
+              />
+            </div>
           )}
         </CModalBody>
         <CModalFooter>
@@ -418,50 +425,42 @@ const Posts = () => {
                         <CTableDataCell>{formatDateTime(post.created_at)}</CTableDataCell>
                         <CTableDataCell>
                           <div className="d-flex">
-                            <CTooltip content="Editar publicación">
-                              <CButton
-                                color="primary"
-                                size="sm"
-                                className="me-2"
-                                onClick={() => handleEdit(post)}
-                              >
-                                <CIcon icon={cilPencil} className="text-white" />
-                              </CButton>
-                            </CTooltip>
-                            <CTooltip content="Eliminar publicación">
-                              <CButton
-                                color="danger"
-                                size="sm"
-                                className="me-2"
-                                onClick={() => handleDeleteClick(post)}
-                              >
-                                <CIcon icon={cilTrash} className="text-white" />
-                              </CButton>
-                            </CTooltip>
-                            <CTooltip content="Ver información de la publicación">
-                              <CButton
-                                color="info"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedPost(post)
-                                  setInfoModal(true)
-                                }}
-                              >
-                                <CIcon icon={cilInfo} className="text-white" />
-                              </CButton>
-                            </CTooltip>
+                            <CButton
+                              color="primary"
+                              size="sm"
+                              className="me-2"
+                              onClick={() => handleEdit(post)}
+                            >
+                              <CIcon icon={cilPencil} className="text-white" />
+                            </CButton>
+                            <CButton
+                              color="danger"
+                              size="sm"
+                              className="me-2"
+                              onClick={() => handleDeleteClick(post)}
+                            >
+                              <CIcon icon={cilTrash} className="text-white" />
+                            </CButton>
+                            <CButton
+                              color="info"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedPost(post)
+                                setInfoModal(true)
+                              }}
+                            >
+                              <CIcon icon={cilInfo} className="text-white" />
+                            </CButton>
                             {['Admin', 'Community_Leader'].includes(userRole) &&
                               post.status !== 'published' && (
-                                <CTooltip content="Aprobar publicación">
-                                  <CButton
-                                    color="success"
-                                    size="sm"
-                                    className="ms-2"
-                                    onClick={() => handleApprove(post.id)}
-                                  >
-                                    <CIcon icon={cilCheck} style={{ color: 'white' }} />
-                                  </CButton>
-                                </CTooltip>
+                                <CButton
+                                  color="success"
+                                  size="sm"
+                                  className="ms-2"
+                                  onClick={() => handleApprove(post.id)}
+                                >
+                                  <CIcon icon={cilCheck} style={{ color: 'white' }} />
+                                </CButton>
                               )}
                           </div>
                         </CTableDataCell>
