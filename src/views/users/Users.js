@@ -20,10 +20,10 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
-import { z } from 'zod'
 import AlertMessage from '../../components/ui/AlertMessage'
 import userApi from '../../api/endpoints/userApi'
 import communityApi from '../../api/endpoints/communityApi'
+import { createUserSchema, updateUserSchema } from '../../schemas/users.schema.js'
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -42,16 +42,6 @@ const Users = () => {
     { id: 2, name: 'Jefe de comunidad' },
     { id: 3, name: 'Lider de calle' },
   ]
-
-  const userSchema = z.object({
-    first_name: z.string().min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres'),
-    last_name: z.string().min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres'),
-    phone: z.string().min(10, 'El teléfono es obligatorio y debe tener al menos 10 caracteres'),
-    email: z.string().email('Debe ser un correo electrónico válido'),
-    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
-    community_id: z.string().min(1, 'Debe seleccionar una comunidad'),
-    rol_id: z.string().min(1, 'Debe seleccionar un rol'),
-  })
 
   const [newUser, setNewUser] = useState({
     first_name: '',
@@ -73,7 +63,7 @@ const Users = () => {
 
   const handleAddUser = async () => {
     // Esto es para validar con zod
-    const result = userSchema.safeParse(newUser)
+    const result = createUserSchema.safeParse(newUser)
     if (!result.success) {
       const errors = {}
       result.error.errors.forEach((err) => {
@@ -141,7 +131,7 @@ const Users = () => {
 
   const handleSaveEdit = async () => {
     // Validar con zod (sin password)
-    const result = userSchema.omit({ password: true }).safeParse(userToEdit)
+    const result = updateUserSchema.omit({ password: true }).safeParse(userToEdit)
     if (!result.success) {
       const errors = {}
       result.error.errors.forEach((err) => {
