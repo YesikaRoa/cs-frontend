@@ -1,7 +1,6 @@
 import {
-  CButton,
-  CCol,
-  CRow,
+  CCard,
+  CCardBody,
   CTable,
   CTableHead,
   CTableRow,
@@ -9,45 +8,38 @@ import {
   CTableBody,
   CTableDataCell,
 } from '@coreui/react'
+import { useState } from 'react'
 
 const Leaders = () => {
+  const [leaders, setLeaders] = useState([
+    { id: 1, nombre: 'Joan Rios', comunidad: 'Lote G de Pirineos I', rol: 'Lider de calle' },
+  ])
+
   return (
-    <>
-      <CRow className="mt-4">
-        <CCol className="text-end mb-3">
-          <CButton color="primary">Agregar Lider</CButton>
-        </CCol>
-      </CRow>
-      <CRow>
-        <CCol>
+    <div className="p-3">
+      <CCard>
+        <CCardBody>
           <CTable hover striped responsive>
             <CTableHead>
               <CTableRow>
                 <CTableHeaderCell>Nombre</CTableHeaderCell>
-                <CTableHeaderCell>Estado</CTableHeaderCell>
-                <CTableHeaderCell>Responsable</CTableHeaderCell>
-                <CTableHeaderCell>Acción</CTableHeaderCell>
+                <CTableHeaderCell>Comunidad</CTableHeaderCell>
+                <CTableHeaderCell>Rol</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              <CTableRow>
-                <CTableDataCell>Juan Perez</CTableDataCell>
-                <CTableDataCell>Activo</CTableDataCell>
-                <CTableDataCell>Responsable 1</CTableDataCell>
-                <CTableDataCell>
-                  <CButton color="danger" size="sm" className="me-2">
-                    Eliminar
-                  </CButton>
-                  <CButton color="warning" size="sm">
-                    Modificar
-                  </CButton>
-                </CTableDataCell>
-              </CTableRow>
+              {leaders.map((leader) => (
+                <CTableRow key={leader.id}>
+                  <CTableDataCell>{leader.nombre}</CTableDataCell>
+                  <CTableDataCell>{leader.comunidad}</CTableDataCell>
+                  <CTableDataCell>{leader.rol}</CTableDataCell>
+                </CTableRow>
+              ))}
             </CTableBody>
           </CTable>
-        </CCol>
-      </CRow>
-    </>
+        </CCardBody>
+      </CCard>
+    </div>
   )
 }
 
