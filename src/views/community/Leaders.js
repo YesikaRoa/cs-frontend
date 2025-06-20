@@ -1,44 +1,74 @@
 import {
   CCard,
   CCardBody,
-  CTable,
-  CTableHead,
-  CTableRow,
-  CTableHeaderCell,
-  CTableBody,
-  CTableDataCell,
+  CCardTitle,
+  CCardText,
+  CCol,
+  CRow,
+  CContainer,
+  CSpinner,
 } from '@coreui/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import userApi from '../../api/endpoints/userApi'
 
 const Leaders = () => {
-  const [leaders, setLeaders] = useState([
-    { id: 1, nombre: 'Joan Rios', comunidad: 'Lote G de Pirineos I', rol: 'Lider de calle' },
-  ])
+  const [leadersByComunidad, setLeadersByComunidad] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    userApi.getUsers().then(res => {
+      const allowedRoles = ['Community_Leader', 'Street_Leader']
+      const roleMap = {
+        'Community_Leader': 'Líder de comunidad',
+        'Street_Leader': 'Líder de calle',
+      }
+      
+      const leaders = (res.data.data || []).filter(user => allowedRoles.includes(user.role?.name))
+    
+      const grouped = {}
+      leaders.forEach(leader => {
+        const comunidad = leader.community?.name || 'Sin comunidad'
+        if (!grouped[comunidad]) grouped[comunidad] = []
+        grouped[comunidad].push({ ...leader, roleNameEs: roleMap[leader.role?.name] || leader.role?.name })
+      })
+      setLeadersByComunidad(grouped)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
 
   return (
     <div className="p-3">
-      <CCard>
-        <CCardBody>
-          <CTable hover striped responsive>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>Nombre</CTableHeaderCell>
-                <CTableHeaderCell>Comunidad</CTableHeaderCell>
-                <CTableHeaderCell>Rol</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {leaders.map((leader) => (
-                <CTableRow key={leader.id}>
-                  <CTableDataCell>{leader.nombre}</CTableDataCell>
-                  <CTableDataCell>{leader.comunidad}</CTableDataCell>
-                  <CTableDataCell>{leader.rol}</CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
-        </CCardBody>
-      </CCard>
+      <CContainer fluid>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <CSpinner color="primary" /> Cargando líderes...
+          </div>
+        ) : (
+          Object.keys(leadersByComunidad).length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>No hay líderes para mostrar.</div>
+          ) : (
+            Object.entries(leadersByComunidad).map(([comunidad, leaders]) => (
+              <div key={comunidad} style={{ marginBottom: '2rem' }}>
+                <h5 style={{ marginBottom: '1rem' }}>{comunidad}</h5>
+                <CRow xs={{ cols: 1 }} md={{ cols: 2 }} lg={{ cols: 3 }} className="g-4">
+                  {leaders.map((leader) => (
+                    <CCol key={leader.id}>
+                      <CCard className="h-100">
+                        <CCardBody>
+                          <CCardTitle>{leader.first_name} {leader.last_name}</CCardTitle>
+                          <CCardText>
+                            <strong>Rol:</strong> {leader.roleNameEs}
+                          </CCardText>
+                        </CCardBody>
+                      </CCard>
+                    </CCol>
+                  ))}
+                </CRow>
+              </div>
+            ))
+          )
+        )}
+      </CContainer>
     </div>
   )
 }

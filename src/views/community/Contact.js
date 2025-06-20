@@ -5,10 +5,10 @@ import AlertMessage from '../../components/ui/AlertMessage'
 
 const Contact = ({ initialData, handleEdit }) => {
   const [data, setData] = useState({})
+  const [initialValues, setInitialValues] = useState({}) 
   const [loading, setLoading] = useState(true)
-  const [errorModal, setErrorModal] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
   const [alertData, setAlertData] = useState(null)
+  const [saving, setSaving] = useState(false)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -18,27 +18,38 @@ const Contact = ({ initialData, handleEdit }) => {
   useEffect(() => {
     setLoading(true)
     communityApi.getAllCommunityInfo().then(res => {
-      const data = res.data.data
+      const dataArr = res.data.data
       const newData = {}
-      data.forEach(item => {
+      dataArr.forEach(item => {
         newData[item.title] = item.value
       })
       setData(newData)
+      setInitialValues(newData) 
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [initialData])
 
-  const handleEditClick = async (updatedData) => {
-    setLoading(true)
+  const handleEditClick = async () => {
+    setSaving(true)
+    const changedFields = {}
+    for (const key of ['PHONE_NUMBER', 'EMAIL', 'LOCATION']) {
+      if (data[key] !== initialValues[key]) {
+        changedFields[key] = data[key]
+      }
+    }
+    if (Object.keys(changedFields).length === 0) {
+      setAlertData({ response: { message: 'No hay cambios para guardar.' }, type: 'info' })
+      setSaving(false)
+      return
+    }
     try {
-      for (const key of ['PHONE_NUMBER', 'EMAIL', 'LOCATION']) {
-        if (updatedData[key] !== undefined) {
-          const response = await communityApi.updateCommunityInfo(key, {
-            title: key,
-            value: updatedData[key],
-          })
-          setAlertData({ response: response.data, type: 'success' })
-        }
+      for (const key of Object.keys(changedFields)) {
+        const response = await communityApi.updateCommunityInfo(key, {
+          title: key,
+          value: changedFields[key],
+        })
+        setAlertData({ response: response.data, type: 'success' })
+        setInitialValues((prev) => ({ ...prev, [key]: changedFields[key] })) 
       }
     } catch (err) {
       let msg = err.response?.data?.message || err.message
@@ -47,7 +58,7 @@ const Contact = ({ initialData, handleEdit }) => {
       }
       setAlertData({ response: { message: msg }, type: 'danger' })
     }
-    setLoading(false)
+    setSaving(false)
   }
 
   return (
@@ -68,6 +79,7 @@ const Contact = ({ initialData, handleEdit }) => {
                       name="PHONE_NUMBER"
                       value={data.PHONE_NUMBER || ''}
                       onChange={handleInputChange}
+                      disabled={saving}
                     />
                   </div>
                   <div className="mb-3">
@@ -77,6 +89,7 @@ const Contact = ({ initialData, handleEdit }) => {
                       name="EMAIL"
                       value={data.EMAIL || ''}
                       onChange={handleInputChange}
+                      disabled={saving}
                     />
                   </div>
                   <div className="mb-3">
@@ -86,10 +99,11 @@ const Contact = ({ initialData, handleEdit }) => {
                       name="LOCATION"
                       value={data.LOCATION || ''}
                       onChange={handleInputChange}
+                      disabled={saving}
                     />
                   </div>
-                  <CButton color="primary" onClick={() => handleEditClick(data)}>
-                    Editar
+                  <CButton color="primary" onClick={handleEditClick} disabled={saving}>
+                    {saving ? 'Guardando...' : 'Editar'}
                   </CButton>
                 </CForm>
               )}
