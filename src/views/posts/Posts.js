@@ -58,11 +58,6 @@ const Posts = () => {
   const [selectedPost, setSelectedPost] = useState(null)
   const userRole = getUserRoleFromToken()
 
-  useEffect(() => {
-    fetchPosts()
-    fetchPostsCategories()
-  }, [])
-
   const fetchPosts = async () => {
     setLoadingPosts(true)
     try {
@@ -117,7 +112,7 @@ const Posts = () => {
     setForm({
       title: post.title,
       content: post.content,
-      category: post.category?.id,
+      category: post.category_id,
       images,
     })
     if (images.length > 0 && images[0].url) {
@@ -132,7 +127,6 @@ const Posts = () => {
     setVisible(true)
   }
 
-  // MODAL DE ELIMINAR
   const handleDeleteClick = (post) => {
     setPostToDelete(post)
     setDeleteModal(true)
@@ -201,6 +195,21 @@ const Posts = () => {
       })
     }
   }
+
+  const getNameStatus = (status) => {
+    const statuses = {
+      published: ['Publicado', 'success'],
+      pending_approval: ['Pendiente', 'warning'],
+      draft: ['Eliminado', 'secondary'],
+    }
+
+    return statuses[status]
+  }
+
+  useEffect(() => {
+    fetchPosts()
+    fetchPostsCategories()
+  }, [])
 
   return (
     <div className="p-4">
@@ -322,23 +331,16 @@ const Posts = () => {
             <div>
               <ul>
                 <li>
-                  <strong>ID:</strong> {selectedPost.id}
-                </li>
-                <li>
                   <strong>Título:</strong> {selectedPost.title}
                 </li>
                 <li>
                   <strong>Contenido:</strong> {selectedPost.content}
                 </li>
                 <li>
-                  <strong>Estado:</strong>{' '}
-                  {selectedPost.status === 'published' ? 'Publicado' : 'Pendiente'}
+                  <strong>Estado:</strong> {getNameStatus(selectedPost.status)[0]}
                 </li>
                 <li>
                   <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)}
-                </li>
-                <li>
-                  <strong>Fecha de actualización:</strong> {formatDateTime(selectedPost.updated_at)}
                 </li>
                 <li>
                   <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
@@ -418,11 +420,13 @@ const Posts = () => {
                         <CTableDataCell>{post.title}</CTableDataCell>
                         <CTableDataCell>{getCategoryName(post)}</CTableDataCell>
                         <CTableDataCell>
-                          <CBadge color={post.status === 'published' ? 'success' : 'warning'}>
-                            {post.status === 'published' ? 'Publicado' : 'Pendiente'}
+                          <CBadge color={getNameStatus(post.status)[1]}>
+                            {getNameStatus(post.status)[0]}
                           </CBadge>
                         </CTableDataCell>
-                        <CTableDataCell>{post.user?.first_name || post.user_id}</CTableDataCell>
+                        <CTableDataCell>
+                          {post.user?.first_name} {post.user?.last_name}
+                        </CTableDataCell>
                         <CTableDataCell>{formatDateTime(post.created_at)}</CTableDataCell>
                         <CTableDataCell>
                           <div className="d-flex">
@@ -453,7 +457,7 @@ const Posts = () => {
                               <CIcon icon={cilInfo} className="text-white" />
                             </CButton>
                             {['Admin', 'Community_Leader'].includes(userRole) &&
-                              post.status !== 'published' && (
+                              post.status == 'pending_approval' && (
                                 <CButton
                                   color="success"
                                   size="sm"
