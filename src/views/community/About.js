@@ -5,7 +5,7 @@ import {
   CCard,
   CCardBody,
   CCol,
-  CFormInput,
+  CFormTextarea,
   CRow,
   CModal,
   CModalBody,
@@ -13,6 +13,7 @@ import {
   CModalHeader,
   CModalTitle,
 } from '@coreui/react'
+import AlertMessage from '../../components/ui/AlertMessage'
 
 const MyCommunity = () => {
   const [visible, setVisible] = useState(false)
@@ -23,18 +24,25 @@ const MyCommunity = () => {
     'Quiénes Somos': { id: null, value: '' },
   })
   const [inputValue, setInputValue] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [alertData, setAlertData] = useState(null)
 
   useEffect(() => {
-    // communityApi.getAllCommunityInfo().then(res => {
-    //   const data = res.data
-    //   const newInfo = { ...info }
-    //   data.forEach(item => {
-    //     if (newInfo[item.title] !== undefined) {
-    //       newInfo[item.title] = { id: item.id, value: item.value }
-    //     }
-    //   })
-    //   setInfo(newInfo)
-    // })
+    setLoading(true)
+    communityApi
+      .getAllCommunityInfo()
+      .then((res) => {
+        const data = res.data.data
+        const newInfo = { ...info }
+        data.forEach((item) => {
+          if (item.title === 'MISSION') newInfo['Misión'] = { id: item.id, value: item.value }
+          if (item.title === 'VISION') newInfo['Visión'] = { id: item.id, value: item.value }
+          if (item.title === 'ABOUT') newInfo['Quiénes Somos'] = { id: item.id, value: item.value }
+        })
+        setInfo(newInfo)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
   }, [])
 
   const handleEdit = (section) => {
@@ -47,25 +55,23 @@ const MyCommunity = () => {
     try {
       const section = editSection
       if (!section) return
-      if (info[section].id) {
-        await communityApi.updateCommunityInfo(info[section].id, {
-          title: section,
-          value: inputValue,
-        })
-      } else {
-        const res = await communityApi.createCommunityInfo({
-          title: section,
-          value: inputValue,
-        })
-        info[section].id = res.data.id
-      }
+      const title = section === 'Misión' ? 'MISSION' : section === 'Visión' ? 'VISION' : 'ABOUT'
+      const response = await communityApi.updateCommunityInfo(title, {
+        title,
+        value: inputValue,
+      })
       setInfo({
         ...info,
         [section]: { ...info[section], value: inputValue },
       })
       setVisible(false)
+      setAlertData({ response: response.data, type: 'success' })
     } catch (err) {
-      alert('Error al guardar: ' + (err.response?.data?.message || err.message))
+      let msg = err.response?.data?.message || err.message
+      if (Array.isArray(msg)) {
+        msg = msg.join(' ')
+      }
+      setAlertData({ response: { message: msg }, type: 'danger' })
     }
   }
 
@@ -81,10 +87,11 @@ const MyCommunity = () => {
           <CModalTitle id="VerticallyCenteredExample">{editSection}</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          <CFormInput
+          <CFormTextarea
             type="text"
             placeholder="Descripción"
             value={inputValue}
+            rows={5}
             onChange={(e) => setInputValue(e.target.value)}
           />
         </CModalBody>
@@ -97,15 +104,28 @@ const MyCommunity = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+      {alertData && (
+        <AlertMessage
+          response={alertData.response}
+          type={alertData.type}
+          onClose={() => setAlertData(null)}
+        />
+      )}
       <CRow className="justify-content-center">
         <CCol md={12} className="component-space">
           <CCard>
             <CCardBody>
               <h5>Misión</h5>
-              <p>{info['Misión'].value}</p>
-              <CButton color="primary" onClick={() => handleEdit('Misión')}>
-                Editar
-              </CButton>
+              {loading ? (
+                <p>Cargando contenido...</p>
+              ) : (
+                <>
+                  <p>{info['Misión'].value}</p>
+                  <CButton color="primary" onClick={() => handleEdit('Misión')}>
+                    Editar
+                  </CButton>
+                </>
+              )}
             </CCardBody>
           </CCard>
         </CCol>
@@ -113,10 +133,16 @@ const MyCommunity = () => {
           <CCard>
             <CCardBody>
               <h5>Visión</h5>
-              <p>{info['Visión'].value}</p>
-              <CButton color="primary" onClick={() => handleEdit('Visión')}>
-                Editar
-              </CButton>
+              {loading ? (
+                <p>Cargando contenido...</p>
+              ) : (
+                <>
+                  <p>{info['Visión'].value}</p>
+                  <CButton color="primary" onClick={() => handleEdit('Visión')}>
+                    Editar
+                  </CButton>
+                </>
+              )}
             </CCardBody>
           </CCard>
         </CCol>
@@ -124,10 +150,16 @@ const MyCommunity = () => {
           <CCard>
             <CCardBody>
               <h5>¿Quiénes Somos?</h5>
-              <p>{info['Quiénes Somos'].value}</p>
-              <CButton color="primary" onClick={() => handleEdit('Quiénes Somos')}>
-                Editar
-              </CButton>
+              {loading ? (
+                <p>Cargando contenido...</p>
+              ) : (
+                <>
+                  <p>{info['Quiénes Somos'].value}</p>
+                  <CButton color="primary" onClick={() => handleEdit('Quiénes Somos')}>
+                    Editar
+                  </CButton>
+                </>
+              )}
             </CCardBody>
           </CCard>
         </CCol>

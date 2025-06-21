@@ -74,7 +74,7 @@ const Community = () => {
         <CTabList variant="tabs" className="component-space">
           <CTab itemKey="about">Nosotros</CTab>
           <CTab itemKey="testimonies">Testimonios</CTab>
-          <CTab itemKey="leaders">Líderes de Calle</CTab>
+          <CTab itemKey="leaders">Líderes</CTab>
           <CTab itemKey="contact">Contacto</CTab>
         </CTabList>
         <CTabContent>
