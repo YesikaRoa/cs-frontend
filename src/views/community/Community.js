@@ -19,8 +19,12 @@ const Community = () => {
     ABOUT: '',
   })
 
+  // Estado para el tab activo
+  const [activeTab, setActiveTab] = useState(null)
+
   useEffect(() => {
     fetchCommunityInformation()
+    setActiveTab(1) 
   }, [])
 
   const fetchCommunityInformation = async () => {
@@ -61,33 +65,32 @@ const Community = () => {
 
   const handleEdit = async (data) => {
     console.log('Edit data:', data)
-    // try {
-    //   await communityApi.updateCommunityInfo(data.id, data)
-    //   fetchCommunityInformation() // Refresh data after edit
-    // } catch (error) {
-    //   console.error('Error updating community information:', error)
-    // }
   }
+
+  const handleTab = (tab) => {
+    setActiveTab(tab)
+  }
+
   return (
     <>
-      <CTabs activeItemKey={'about'}>
-        <CTabList variant="tabs" className="component-space">
-          <CTab itemKey="about">Nosotros</CTab>
-          <CTab itemKey="testimonies">Testimonios</CTab>
-          <CTab itemKey="leaders">Líderes</CTab>
-          <CTab itemKey="contact">Contacto</CTab>
+      <CTabs activeItemKey={activeTab} onActiveItemChange={setActiveTab}>
+        <CTabList variant="tabs" className="mb-3">
+          <CTab itemKey={1} onClick={() => handleTab(1)}>Nosotros</CTab>
+          <CTab itemKey={2} onClick={() => handleTab(2)}>Testimonios</CTab>
+          <CTab itemKey={3} onClick={() => handleTab(3)}>Líderes</CTab>
+          <CTab itemKey={4} onClick={() => handleTab(4)}>Contacto</CTab>
         </CTabList>
         <CTabContent>
-          <CTabPanel itemKey="about">
+          <CTabPanel itemKey={1}>
             <About initialData={aboutData} />
           </CTabPanel>
-          <CTabPanel itemKey="testimonies">
+          <CTabPanel itemKey={2}>
             <Testimonies />
           </CTabPanel>
-          <CTabPanel itemKey="leaders">
+          <CTabPanel itemKey={3}>
             <Leaders />
           </CTabPanel>
-          <CTabPanel itemKey="contact">
+          <CTabPanel itemKey={4}>
             <Contact initialData={contactData} handleEdit={handleEdit} />
           </CTabPanel>
         </CTabContent>
