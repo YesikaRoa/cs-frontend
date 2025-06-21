@@ -5,7 +5,7 @@ import {
   CCard,
   CCardBody,
   CCol,
-  CFormInput,
+  CFormTextarea,
   CRow,
   CModal,
   CModalBody,
@@ -29,17 +29,20 @@ const MyCommunity = () => {
 
   useEffect(() => {
     setLoading(true)
-    communityApi.getAllCommunityInfo().then(res => {
-      const data = res.data.data
-      const newInfo = { ...info }
-      data.forEach(item => {
-        if (item.title === 'MISSION') newInfo['Misión'] = { id: item.id, value: item.value }
-        if (item.title === 'VISION') newInfo['Visión'] = { id: item.id, value: item.value }
-        if (item.title === 'ABOUT') newInfo['Quiénes Somos'] = { id: item.id, value: item.value }
+    communityApi
+      .getAllCommunityInfo()
+      .then((res) => {
+        const data = res.data.data
+        const newInfo = { ...info }
+        data.forEach((item) => {
+          if (item.title === 'MISSION') newInfo['Misión'] = { id: item.id, value: item.value }
+          if (item.title === 'VISION') newInfo['Visión'] = { id: item.id, value: item.value }
+          if (item.title === 'ABOUT') newInfo['Quiénes Somos'] = { id: item.id, value: item.value }
+        })
+        setInfo(newInfo)
+        setLoading(false)
       })
-      setInfo(newInfo)
-      setLoading(false)
-    }).catch(() => setLoading(false))
+      .catch(() => setLoading(false))
   }, [])
 
   const handleEdit = (section) => {
@@ -84,10 +87,11 @@ const MyCommunity = () => {
           <CModalTitle id="VerticallyCenteredExample">{editSection}</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          <CFormInput
+          <CFormTextarea
             type="text"
             placeholder="Descripción"
             value={inputValue}
+            rows={5}
             onChange={(e) => setInputValue(e.target.value)}
           />
         </CModalBody>
