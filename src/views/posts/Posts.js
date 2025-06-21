@@ -191,13 +191,14 @@ const Posts = () => {
 
   const handleApprove = async (postId) => {
     try {
-      const response = await postApi.changePostStatus(postId, 'approved')
-      setApproveMessage('La publicación a sido aprobada')
-      setApproveModal(true)
+      const response = await postApi.changePostStatus(postId, 'published')
+      setAlertData({ response: response.data, type: 'success' })
       fetchPosts()
     } catch (error) {
-      setApproveMessage('Error al aprobar la publicación')
-      setApproveModal(true)
+      setAlertData({
+        response: { message: error?.response?.data?.message || 'Error al aprobar la publicación' },
+        type: 'danger',
+      })
     }
   }
 
