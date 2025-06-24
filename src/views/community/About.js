@@ -66,12 +66,11 @@ const MyCommunity = () => {
       })
       setVisible(false)
       setAlertData({ response: response.data, type: 'success' })
-    } catch (err) {
-      let msg = err.response?.data?.message || err.message
-      if (Array.isArray(msg)) {
-        msg = msg.join(' ')
-      }
-      setAlertData({ response: { message: msg }, type: 'danger' })
+    } catch ({ response }) {
+      setAlertData({
+        response: { message: response?.data || 'Error al guardar la información' },
+        type: 'danger',
+      })
     }
   }
 

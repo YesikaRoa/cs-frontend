@@ -142,7 +142,7 @@ const Posts = () => {
       setAlertData({ response: response.data, type: 'success' })
     } catch ({ response }) {
       setAlertData({
-        response: { message: response?.data?.message || 'Error al eliminar publicación' },
+        response: { message: response?.data || 'Error al eliminar publicación' },
         type: 'danger',
       })
 
