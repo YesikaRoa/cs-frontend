@@ -104,7 +104,7 @@ const Testimonies = () => {
       setAlertData({ response: response.data, type: 'success' })
     } catch ({ response }) {
       setAlertData({
-        response: { message: response?.data?.message || 'Error al eliminar testimonio' },
+        response: { message: response?.data || 'Error al eliminar testimonio' },
         type: 'danger',
       })
       setDeleteModal(false)
@@ -138,7 +138,7 @@ const Testimonies = () => {
       setEditId(null)
     } catch ({ response }) {
       setAlertData({
-        response: { message: response?.data?.message || 'Error al guardar testimonio' },
+        response: { message: response?.data || 'Error al guardar testimonio' },
         type: 'danger',
       })
     }
@@ -153,7 +153,7 @@ const Testimonies = () => {
           setForm(initialForm)
           setIsEdit(false)
           setEditId(null)
-          setFormErrors({}) 
+          setFormErrors({})
         }}
       >
         <CModalHeader>

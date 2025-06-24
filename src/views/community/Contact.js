@@ -5,7 +5,7 @@ import AlertMessage from '../../components/ui/AlertMessage'
 
 const Contact = ({ initialData, handleEdit }) => {
   const [data, setData] = useState({})
-  const [initialValues, setInitialValues] = useState({}) 
+  const [initialValues, setInitialValues] = useState({})
   const [loading, setLoading] = useState(true)
   const [alertData, setAlertData] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -17,16 +17,19 @@ const Contact = ({ initialData, handleEdit }) => {
 
   useEffect(() => {
     setLoading(true)
-    communityApi.getAllCommunityInfo().then(res => {
-      const dataArr = res.data.data
-      const newData = {}
-      dataArr.forEach(item => {
-        newData[item.title] = item.value
+    communityApi
+      .getAllCommunityInfo()
+      .then((res) => {
+        const dataArr = res.data.data
+        const newData = {}
+        dataArr.forEach((item) => {
+          newData[item.title] = item.value
+        })
+        setData(newData)
+        setInitialValues(newData)
+        setLoading(false)
       })
-      setData(newData)
-      setInitialValues(newData) 
-      setLoading(false)
-    }).catch(() => setLoading(false))
+      .catch(() => setLoading(false))
   }, [initialData])
 
   const handleEditClick = async () => {
@@ -49,14 +52,13 @@ const Contact = ({ initialData, handleEdit }) => {
           value: changedFields[key],
         })
         setAlertData({ response: response.data, type: 'success' })
-        setInitialValues((prev) => ({ ...prev, [key]: changedFields[key] })) 
+        setInitialValues((prev) => ({ ...prev, [key]: changedFields[key] }))
       }
-    } catch (err) {
-      let msg = err.response?.data?.message || err.message
-      if (Array.isArray(msg)) {
-        msg = msg.join(' ')
-      }
-      setAlertData({ response: { message: msg }, type: 'danger' })
+    } catch ({ response }) {
+      setAlertData({
+        response: { message: response?.data || 'Error al guardar la información' },
+        type: 'danger',
+      })
     }
     setSaving(false)
   }
