@@ -20,11 +20,10 @@ const Community = () => {
   })
 
   // Estado para el tab activo
-  const [activeTab, setActiveTab] = useState(null)
+  const [activeTab, setActiveTab] = useState(1)
 
   useEffect(() => {
     fetchCommunityInformation()
-    setActiveTab(1) 
   }, [])
 
   const fetchCommunityInformation = async () => {
@@ -63,22 +62,22 @@ const Community = () => {
     }
   }
 
-  const handleEdit = async (data) => {
-    console.log('Edit data:', data)
-  }
-
-  const handleTab = (tab) => {
-    setActiveTab(tab)
-  }
-
   return (
     <>
       <CTabs activeItemKey={activeTab} onActiveItemChange={setActiveTab}>
-        <CTabList variant="tabs" className="mb-3">
-          <CTab itemKey={1} onClick={() => handleTab(1)}>Nosotros</CTab>
-          <CTab itemKey={2} onClick={() => handleTab(2)}>Testimonios</CTab>
-          <CTab itemKey={3} onClick={() => handleTab(3)}>Líderes</CTab>
-          <CTab itemKey={4} onClick={() => handleTab(4)}>Contacto</CTab>
+        <CTabList variant="tabs" className="component-space">
+          <CTab itemKey={1} onClick={() => setActiveTab(1)}>
+            Nosotros
+          </CTab>
+          <CTab itemKey={2} onClick={() => setActiveTab(2)}>
+            Testimonios
+          </CTab>
+          <CTab itemKey={3} onClick={() => setActiveTab(3)}>
+            Líderes
+          </CTab>
+          <CTab itemKey={4} onClick={() => setActiveTab(4)}>
+            Contacto
+          </CTab>
         </CTabList>
         <CTabContent>
           <CTabPanel itemKey={1}>
@@ -91,7 +90,7 @@ const Community = () => {
             <Leaders />
           </CTabPanel>
           <CTabPanel itemKey={4}>
-            <Contact initialData={contactData} handleEdit={handleEdit} />
+            <Contact initialData={contactData} />
           </CTabPanel>
         </CTabContent>
       </CTabs>
