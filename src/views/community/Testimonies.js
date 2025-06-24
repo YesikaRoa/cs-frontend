@@ -27,6 +27,7 @@ import testimoniesApi from '../../api/endpoints/testimoniesApi'
 import communityApi from '../../api/endpoints/communityApi'
 import AlertMessage from '../../components/ui/AlertMessage'
 import formatDateTime from '../../utils/formatDateTime'
+import { testimonySchema } from '../../schemas/testimonies.schema'
 
 const initialForm = {
   name: '',
@@ -45,6 +46,7 @@ const Testimonies = () => {
   const [deleteModal, setDeleteModal] = useState(false)
   const [testimonyToDelete, setTestimonyToDelete] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [formErrors, setFormErrors] = useState({})
 
   useEffect(() => {
     fetchTestimonies()
@@ -102,7 +104,7 @@ const Testimonies = () => {
       setAlertData({ response: response.data, type: 'success' })
     } catch ({ response }) {
       setAlertData({
-        response: { message: response?.data?.message || 'Error al eliminar testimonio' },
+        response: { message: response?.data || 'Error al eliminar testimonio' },
         type: 'danger',
       })
       setDeleteModal(false)
@@ -111,6 +113,16 @@ const Testimonies = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const result = testimonySchema.safeParse(form)
+    if (!result.success) {
+      const errors = {}
+      result.error.errors.forEach((err) => {
+        errors[err.path[0]] = err.message
+      })
+      setFormErrors(errors)
+      return
+    }
+    setFormErrors({})
     try {
       let response
       if (isEdit && editId) {
@@ -124,8 +136,11 @@ const Testimonies = () => {
       setForm(initialForm)
       setIsEdit(false)
       setEditId(null)
-    } catch (error) {
-      setAlertData({ response: error.response?.data || { message: 'Error' }, type: 'danger' })
+    } catch ({ response }) {
+      setAlertData({
+        response: { message: response?.data || 'Error al guardar testimonio' },
+        type: 'danger',
+      })
     }
   }
 
@@ -138,6 +153,7 @@ const Testimonies = () => {
           setForm(initialForm)
           setIsEdit(false)
           setEditId(null)
+          setFormErrors({})
         }}
       >
         <CModalHeader>
@@ -151,7 +167,8 @@ const Testimonies = () => {
               value={form.name}
               onChange={handleChange}
               className="mb-2"
-              required
+              invalid={!!formErrors.name}
+              feedback={formErrors.name}
             />
             <CFormTextarea
               label="Comentario"
@@ -159,7 +176,8 @@ const Testimonies = () => {
               value={form.comment}
               onChange={handleChange}
               className="mb-2"
-              required
+              invalid={!!formErrors.comment}
+              feedback={formErrors.comment}
             />
             <CFormSelect
               label="Comunidad"
@@ -167,6 +185,8 @@ const Testimonies = () => {
               value={form.community_id}
               onChange={handleChange}
               required
+              invalid={!!formErrors.community_id}
+              feedback={formErrors.community_id}
             >
               <option value="">Seleccione una comunidad</option>
               {communities.map((comunidad) => (
