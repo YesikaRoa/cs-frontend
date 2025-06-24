@@ -19,6 +19,9 @@ const Community = () => {
     ABOUT: '',
   })
 
+  // Estado para el tab activo
+  const [activeTab, setActiveTab] = useState(1)
+
   useEffect(() => {
     fetchCommunityInformation()
   }, [])
@@ -59,36 +62,35 @@ const Community = () => {
     }
   }
 
-  const handleEdit = async (data) => {
-    console.log('Edit data:', data)
-    // try {
-    //   await communityApi.updateCommunityInfo(data.id, data)
-    //   fetchCommunityInformation() // Refresh data after edit
-    // } catch (error) {
-    //   console.error('Error updating community information:', error)
-    // }
-  }
   return (
     <>
-      <CTabs activeItemKey={'about'}>
+      <CTabs activeItemKey={activeTab} onActiveItemChange={setActiveTab}>
         <CTabList variant="tabs" className="component-space">
-          <CTab itemKey="about">Nosotros</CTab>
-          <CTab itemKey="testimonies">Testimonios</CTab>
-          <CTab itemKey="leaders">Líderes</CTab>
-          <CTab itemKey="contact">Contacto</CTab>
+          <CTab itemKey={1} onClick={() => setActiveTab(1)}>
+            Nosotros
+          </CTab>
+          <CTab itemKey={2} onClick={() => setActiveTab(2)}>
+            Testimonios
+          </CTab>
+          <CTab itemKey={3} onClick={() => setActiveTab(3)}>
+            Líderes
+          </CTab>
+          <CTab itemKey={4} onClick={() => setActiveTab(4)}>
+            Contacto
+          </CTab>
         </CTabList>
         <CTabContent>
-          <CTabPanel itemKey="about">
+          <CTabPanel itemKey={1}>
             <About initialData={aboutData} />
           </CTabPanel>
-          <CTabPanel itemKey="testimonies">
+          <CTabPanel itemKey={2}>
             <Testimonies />
           </CTabPanel>
-          <CTabPanel itemKey="leaders">
+          <CTabPanel itemKey={3}>
             <Leaders />
           </CTabPanel>
-          <CTabPanel itemKey="contact">
-            <Contact initialData={contactData} handleEdit={handleEdit} />
+          <CTabPanel itemKey={4}>
+            <Contact initialData={contactData} />
           </CTabPanel>
         </CTabContent>
       </CTabs>
