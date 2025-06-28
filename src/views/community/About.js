@@ -14,6 +14,7 @@ import {
   CModalTitle,
 } from '@coreui/react'
 import AlertMessage from '../../components/ui/AlertMessage'
+import { aboutSectionSchema } from '../../schemas/about.schema'
 
 const MyCommunity = () => {
   const [visible, setVisible] = useState(false)
@@ -26,6 +27,7 @@ const MyCommunity = () => {
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(false)
   const [alertData, setAlertData] = useState(null)
+  const [formError, setFormError] = useState('')
 
   useEffect(() => {
     setLoading(true)
@@ -48,10 +50,20 @@ const MyCommunity = () => {
   const handleEdit = (section) => {
     setEditSection(section)
     setInputValue(info[section]?.value || '')
+    setFormError('')
     setVisible(true)
   }
 
   const handleSave = async () => {
+    setFormError('')
+    try {
+      aboutSectionSchema.parse({ value: inputValue })
+    } catch (err) {
+      if (err.errors && err.errors[0]) {
+        setFormError(err.errors[0].message)
+        return
+      }
+    }
     try {
       const section = editSection
       if (!section) return
@@ -92,7 +104,9 @@ const MyCommunity = () => {
             value={inputValue}
             rows={5}
             onChange={(e) => setInputValue(e.target.value)}
+            invalid={!!formError}
           />
+          {formError && <div className="text-danger small mt-2">{formError}</div>}
         </CModalBody>
         <CModalFooter>
           <CButton color="primary" onClick={handleSave}>

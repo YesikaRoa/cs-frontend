@@ -30,6 +30,7 @@ import { cilPencil, cilTrash, cilInfo, cilUserPlus, cilCheck, cilPlus } from '@c
 import postApi from '../../api/endpoints/postApi'
 import formatDateTime from '../../utils/formatDateTime'
 import AlertMessage from '../../components/ui/AlertMessage'
+import { createPostSchema } from '../../schemas/posts.schema'
 
 const initialForm = {
   title: '',
@@ -56,6 +57,7 @@ const Posts = () => {
   const [postToDelete, setPostToDelete] = useState(null)
   const [infoModal, setInfoModal] = useState(false)
   const [selectedPost, setSelectedPost] = useState(null)
+  const [formErrors, setFormErrors] = useState({})
   const userRole = getUserRoleFromToken()
 
   const fetchPosts = async () => {
@@ -150,8 +152,31 @@ const Posts = () => {
     }
   }
 
+  const validateForm = () => {
+    try {
+      createPostSchema.parse({
+        title: form.title,
+        content: form.content,
+        category: form.category,
+        image: imageFile || form.image,
+      })
+      setFormErrors({})
+      return true
+    } catch (err) {
+      if (err.errors) {
+        const errors = {}
+        err.errors.forEach((e) => {
+          errors[e.path[0]] = e.message
+        })
+        setFormErrors(errors)
+      }
+      return false
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!validateForm()) return
     setIsSaving(true)
     const formData = new FormData()
     if (imageFile) {
@@ -221,6 +246,7 @@ const Posts = () => {
           setForm(initialForm)
           setIsEdit(false)
           setEditId(null)
+          setFormErrors({})
         }}
         aria-labelledby="OptionalSizesExample1"
       >
@@ -244,7 +270,11 @@ const Posts = () => {
                         placeholder="Ingrese el título"
                         value={form.title}
                         onChange={handleChange}
+                        invalid={!!formErrors.title}
                       />
+                      {formErrors.title && (
+                        <div className="text-danger small">{formErrors.title}</div>
+                      )}
                     </div>
 
                     <div className="mb-3">
@@ -255,12 +285,21 @@ const Posts = () => {
                         placeholder="Ingrese una descripción"
                         value={form.content}
                         onChange={handleChange}
+                        invalid={!!formErrors.content}
                       />
+                      {formErrors.content && (
+                        <div className="text-danger small">{formErrors.content}</div>
+                      )}
                     </div>
 
                     <div className="mb-3">
                       <CFormLabel htmlFor="category">Categoria</CFormLabel>
-                      <CFormSelect id="category" value={form.category} onChange={handleChange}>
+                      <CFormSelect
+                        id="category"
+                        value={form.category}
+                        onChange={handleChange}
+                        invalid={!!formErrors.category}
+                      >
                         <option value="">Seleccione una categoría</option>
                         {postsCategories.map((cat) => (
                           <option key={cat.id} value={cat.id}>
@@ -268,6 +307,9 @@ const Posts = () => {
                           </option>
                         ))}
                       </CFormSelect>
+                      {formErrors.category && (
+                        <div className="text-danger small">{formErrors.category}</div>
+                      )}
                     </div>
                   </CForm>
                 </CCardBody>
@@ -279,6 +321,7 @@ const Posts = () => {
                   <h3>Subir Imagen</h3>
                   <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
                   <CFormInput type="file" id="image" accept="image/*" onChange={handleChange} />
+                  
                   {imagePreview && (
                     <div style={{ marginTop: 10 }}>
                       <img
@@ -304,6 +347,7 @@ const Posts = () => {
               setForm(initialForm)
               setIsEdit(false)
               setEditId(null)
+              setFormErrors({})
             }}
             disabled={isSaving}
           >
