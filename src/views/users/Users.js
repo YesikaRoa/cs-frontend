@@ -39,6 +39,8 @@ const Users = () => {
   const [userToDelete, setUserToDelete] = useState(null)
   const [userToEdit, setUserToEdit] = useState(null)
   const [alertData, setAlertData] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
 
   const roles = [
     { id: 1, name: 'Admin' },
@@ -64,6 +66,16 @@ const Users = () => {
     setNewUser({ ...newUser, [name]: value })
   }
 
+  const handleImageChange = (e) => {
+  const file = e.target.files[0]
+  setImageFile(file)
+  if (file) {
+    setImagePreview(URL.createObjectURL(file))
+  } else {
+    setImagePreview(null)
+  }
+}
+
   const handleAddUser = async () => {
     // Esto es para validar con zod
     const result = createUserSchema.safeParse(newUser)
@@ -77,14 +89,18 @@ const Users = () => {
     }
     setFormErrors({})
     try {
-      const payload = {
-        ...newUser,
-        community_id: Number(newUser.community_id),
-        rol_id: Number(newUser.rol_id),
-        is_active: true,
+      const formData = new FormData()
+      Object.entries(newUser).forEach(([key, value]) => {
+        if (key === 'community_id' || key === 'rol_id') {
+          formData.append(key, Number(value))
+        } else {
+          formData.append(key, value)
+        }
+      })
+      if (imageFile) {
+        formData.append('image', imageFile)
       }
-      const { data } = await userApi.createUser(payload)
-
+      const { data } = await userApi.createUser(formData)
       setNewUser({
         first_name: '',
         last_name: '',
@@ -95,9 +111,11 @@ const Users = () => {
         rol_id: '',
         is_active: true,
       })
+      setImageFile(null)
+      setImagePreview(null)
       setAddModal(false)
       fetchData()
-      setAlertData({ response: data, type: 'success' })
+      setAlertData({ response: data, type: 'success' }) // ALERTA DE SUCCESS
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -145,20 +163,39 @@ const Users = () => {
     }
     setFormErrors({})
     try {
-      const payload = {
-        first_name: userToEdit.first_name,
-        last_name: userToEdit.last_name,
-        phone: userToEdit.phone,
-        email: userToEdit.email,
-        community_id: Number(userToEdit.community_id),
-        rol_id: Number(userToEdit.rol_id),
-        is_active: userToEdit.is_active ?? true,
+      const formData = new FormData()
+      Object.entries(userToEdit).forEach(([key, value]) => {
+        if (key === 'community_id' || key === 'rol_id') {
+          formData.append(key, Number(value))
+        } else {
+          formData.append(key, value)
+        }
+      })
+      if (imageFile) {
+        formData.append('image', imageFile)
       }
-      const { data } = await userApi.updateUser(userToEdit.id, payload)
-      setUsers(users.map((u) => (u.id === userToEdit.id ? { ...u, ...payload } : u)))
+      const { data } = await userApi.updateUser(userToEdit.id, formData)
+
+      // --- ACTUALIZA LOCALSTORAGE SI ES EL USUARIO LOGGEADO ---
+      const userInfoLocal = JSON.parse(localStorage.getItem('userInfo') || '{}')
+      if (String(userInfoLocal.id) === String(userToEdit.id)) {
+        const updatedUserInfo = {
+          ...userInfoLocal, // Mantén los datos actuales
+          ...userToEdit,    // Aplica los cambios editados (nombre, email, etc.)
+          url_image: data.data?.url_image || userInfoLocal.url_image, // Actualiza imagen si viene nueva
+        }
+
+        localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+        window.dispatchEvent(new Event('userInfoUpdated'))
+      }
+      // --------------------------------------------------------
+
+      fetchData()
       setEditModal(false)
       setUserToEdit(null)
-      setAlertData({ response: data, type: 'success' })
+      setImageFile(null)
+      setImagePreview(null)
+      setAlertData({ response: data, type: 'success' }) // ALERTA DE SUCCESS
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -315,6 +352,20 @@ const Users = () => {
                   selectedUser.role?.name ||
                   'No disponible'}
               </li>
+              <li>
+                <strong>Imagen del usuario:</strong>
+                {selectedUser?.url_image ? (
+                  <div className="user-image-container">
+                    <img
+                      src={selectedUser.url_image}
+                      alt="Imagen de usuario"
+                      className="user-image"
+                    />
+                  </div>
+                ) : (
+                  ' No disponible'
+                )}
+              </li>
             </ul>
           )}
         </CModalBody>
@@ -330,9 +381,16 @@ const Users = () => {
         onClose={() => {
           setAddModal(false)
           setFormErrors({})
+          setImageFile(null)
+          setImagePreview(null)
         }}
       >
-        <CModalHeader onClose={() => setAddModal(false)}>
+        <CModalHeader onClose={() => {
+          setAddModal(false)
+          setFormErrors({})
+          setImageFile(null)
+          setImagePreview(null)
+        }}>
           <CModalTitle>Añadir nuevo usuario</CModalTitle>
         </CModalHeader>
         <CModalBody>
@@ -415,6 +473,19 @@ const Users = () => {
                 </option>
               ))}
             </CFormSelect>
+            <CFormInput
+              type="file"
+              label="Imagen"
+              name="url_image"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="mb-2"
+            />
+            {imagePreview && (
+              <div className="user-image-container">
+                <img src={imagePreview} alt="preview" className="preview-image" />
+              </div>
+            )}
           </CForm>
         </CModalBody>
         <CModalFooter>
@@ -427,8 +498,18 @@ const Users = () => {
         </CModalFooter>
       </CModal>
 
-      <CModal visible={editModal} onClose={() => setEditModal(false)}>
-        <CModalHeader onClose={() => setEditModal(false)}>
+        <CModal visible={editModal} onClose={() => {
+            setEditModal(false)
+            setFormErrors({})
+            setImageFile(null)
+            setImagePreview(null)
+            }}>
+        <CModalHeader onClose={() => {
+            setEditModal(false)
+            setFormErrors({})
+            setImageFile(null)
+            setImagePreview(null)
+            }}>
           <CModalTitle>Editar usuario</CModalTitle>
         </CModalHeader>
         <CModalBody>
@@ -498,6 +579,23 @@ const Users = () => {
                   </option>
                 ))}
               </CFormSelect>
+              {(imagePreview || userToEdit?.url_image) && (
+                <div className="mb-3 text-center user-image-container">
+                  <img
+                    src={imagePreview || userToEdit.url_image}
+                    alt="preview"
+                    className="preview-image"
+                  />
+                </div>
+              )}
+              <CFormInput
+                type="file"
+                label="Imagen"
+                name="url_image"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="mb-2"
+              />
             </CForm>
           )}
         </CModalBody>
