@@ -17,6 +17,10 @@ import AlertMessage from '../../components/ui/AlertMessage'
 import profileApi from '../../api/endpoints/profileApi'
 import { getRoleNameByKey } from '../../utils/roles'
 import { z } from 'zod'
+import './Profile.css'
+import CIcon from '@coreui/icons-react'
+import { cilHttps, cilPencil } from '@coreui/icons'
+import defaultProfile from '../../assets/images/default-profile6.png'
 
 const updateProfileSchema = z.object({
   first_name: z.string()
@@ -113,13 +117,17 @@ const Profile = () => {
         phone: editInfo.phone,
       }
       const response = await profileApi.editProfile(payload)
-      setUserInfo((prev) => ({
-        ...prev,
-        first_name: editInfo.first_name,
-        last_name: editInfo.last_name,
-        email: editInfo.email,
-        phone: editInfo.phone,
-      }))
+
+      const updatedUserInfo = {
+        ...userInfo, // conserva todos los datos previos
+        ...editInfo, // actualiza solo los campos modificados
+        url_image: response.data.url_image || userInfo.url_image, //Esto no sirvióxd
+      }
+
+      setUserInfo(updatedUserInfo)
+      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+      window.dispatchEvent(new Event('userInfoUpdated'))
+
       setShowEditModal(false)
       setSuccessMessage('Perfil editado correctamente')
       setShowSuccess(true)
@@ -132,10 +140,23 @@ const Profile = () => {
     profileApi
       .getProfile()
       .then((response) => {
-        setUserInfo(response.data)
+        // Esto es para obtener la imagen del localstorage 
+        const userInfoLocal = localStorage.getItem('userInfo')
+        let url_image = null
+        if (userInfoLocal) {
+          const parsed = JSON.parse(userInfoLocal)
+          url_image = parsed.url_image
+        }
+        setUserInfo({
+          ...response.data,
+          url_image: url_image || defaultProfile,
+        })
       })
-      .catch(({ response }) => {
-        setAlertData({ response: response.data, type: 'danger' })
+      .catch(() => {
+        const userInfoLocal = localStorage.getItem('userInfo')
+        if (userInfoLocal) {
+          setUserInfo(JSON.parse(userInfoLocal))
+        }
       })
       .finally(() => setLoadingUser(false))
   }, [])
@@ -158,39 +179,43 @@ const Profile = () => {
           {successMessage}
         </div>
       )}
-      <CCard style={{ width: '60%', maxWidth: '800px' }}>
+      <CCard style={{ width: '60%', maxWidth: '800px', position: 'relative' }}>
         <CCardHeader>
-          <h5>Información Personal</h5>
+          <h5 className="text-center w-100">Información Personal</h5>
         </CCardHeader>
         <CCardBody>
-          <div className="mb-3">
-            <strong>Nombre:</strong> {userInfo?.first_name}
+          <div className="d-flex justify-content-center mb-4">
+            <div className="profile-image-circle">
+              <img
+                src={userInfo?.url_image || defaultProfile}
+                alt="Imagen de perfil"
+                className="profile-image-inside-circle"
+              />
+            </div>
           </div>
-          <div className="mb-3">
-            <strong>Apellido:</strong> {userInfo?.last_name}
+          <div className="text-center mb-4">
+            <div className="mb-2">
+              <strong>Nombre:</strong> {userInfo?.first_name}
+            </div>
+            <div className="mb-2">
+              <strong>Apellido:</strong> {userInfo?.last_name}
+            </div>
+            <div className="mb-2">
+              <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
+            </div>
+            <div className="mb-2">
+              <strong>Email:</strong> {userInfo?.email}
+            </div>
+            <div className="mb-2">
+              <strong>Comunidad:</strong> {userInfo?.community?.name}
+            </div>
+            <div className="mb-2">
+              <strong>Rol:</strong> {getRoleNameByKey(userInfo?.role?.name)}
+            </div>
           </div>
-          <div className="mb-3">
-            <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
-          </div>
-          <div className="mb-3">
-            <strong>Email:</strong> {userInfo?.email}
-          </div>
-          <div className="mb-3">
-            <strong>Dirección:</strong> {userInfo?.community?.address || 'No disponible'}
-          </div>
-          <div className="mb-3">
-            <strong>Comunidad:</strong> {userInfo?.community?.name}
-          </div>
-          <div className="mb-3">
-            <strong>Rol:</strong> {getRoleNameByKey(userInfo?.role?.name)}
-          </div>
-          <div className="d-flex justify-content-between">
-            <CButton
-              color="primary"
-              onClick={openEditModal}
-              disabled={loadingUser}
-            >
-              Editar Información
+          <div className="d-flex justify-content-center gap-3">
+            <CButton color="primary" onClick={openEditModal} disabled={loadingUser}>
+              <CIcon icon={cilPencil} /> Editar Información
             </CButton>
             <CButton
               color="info"
@@ -198,6 +223,7 @@ const Profile = () => {
               onClick={() => setShowPasswordModal(true)}
               disabled={loadingUser}
             >
+              <CIcon icon={cilHttps} className='me-2' />
               Cambiar Contraseña
             </CButton>
           </div>
@@ -205,7 +231,9 @@ const Profile = () => {
       </CCard>
 
       <CModal visible={showPasswordModal} onClose={() => setShowPasswordModal(false)}>
-        <CModalHeader>Cambiar Contraseña</CModalHeader>
+        <CModalHeader>
+          Cambiar Contraseña
+        </CModalHeader>
         <CModalBody>
           <CForm>
             <CFormInput

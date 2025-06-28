@@ -6,3 +6,24 @@
   box-shadow: 0 2px 8px rgba(67, 233, 123, 0.15);
   transition: background 0.3s;
 }
+
+.user-image-container {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-image,
+.preview-image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 350px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0;
+}
