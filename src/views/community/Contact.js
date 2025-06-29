@@ -2,6 +2,7 @@ import { CButton, CCard, CCardBody, CCol, CForm, CFormInput, CFormLabel, CRow } 
 import { useState, useEffect } from 'react'
 import communityApi from '../../api/endpoints/communityApi'
 import AlertMessage from '../../components/ui/AlertMessage'
+import { contactSchema } from '../../schemas/contact.schema'
 
 const Contact = ({ initialData, handleEdit }) => {
   const [data, setData] = useState({})
@@ -9,10 +10,12 @@ const Contact = ({ initialData, handleEdit }) => {
   const [loading, setLoading] = useState(true)
   const [alertData, setAlertData] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [formErrors, setFormErrors] = useState({})
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setData((prevData) => ({ ...prevData, [name]: value }))
+    setFormErrors((prev) => ({ ...prev, [name]: undefined }))
   }
 
   useEffect(() => {
@@ -32,6 +35,25 @@ const Contact = ({ initialData, handleEdit }) => {
       .catch(() => setLoading(false))
   }, [initialData])
 
+  const validateFields = (fields) => {
+  const pickedSchema = contactSchema.pick(fields.reduce((obj, key) => ({ ...obj, [key]: true }), {}))
+  const result = pickedSchema.safeParse(data)
+
+  if (result.success) {
+    setFormErrors({})
+    return true
+  } else {
+    const errors = {}
+    result.error.errors.forEach((e) => {
+      errors[e.path[0]] = e.message
+    })
+    setFormErrors(errors)
+    return false
+  }
+}
+
+
+
   const handleEditClick = async () => {
     setSaving(true)
     const changedFields = {}
@@ -42,6 +64,11 @@ const Contact = ({ initialData, handleEdit }) => {
     }
     if (Object.keys(changedFields).length === 0) {
       setAlertData({ response: { message: 'No hay cambios para guardar.' }, type: 'info' })
+      setSaving(false)
+      return
+    }
+    
+    if (!validateFields(Object.keys(changedFields))) {
       setSaving(false)
       return
     }
@@ -82,7 +109,11 @@ const Contact = ({ initialData, handleEdit }) => {
                       value={data.PHONE_NUMBER || ''}
                       onChange={handleInputChange}
                       disabled={saving}
+                      invalid={!!formErrors.PHONE_NUMBER}
                     />
+                    {formErrors.PHONE_NUMBER && (
+                      <div className="text-danger small">{formErrors.PHONE_NUMBER}</div>
+                    )}
                   </div>
                   <div className="mb-3">
                     <CFormLabel>Correo electrónico</CFormLabel>
@@ -92,7 +123,9 @@ const Contact = ({ initialData, handleEdit }) => {
                       value={data.EMAIL || ''}
                       onChange={handleInputChange}
                       disabled={saving}
+                      invalid={!!formErrors.EMAIL}
                     />
+                    {formErrors.EMAIL && <div className="text-danger small">{formErrors.EMAIL}</div>}
                   </div>
                   <div className="mb-3">
                     <CFormLabel>Dirección</CFormLabel>
@@ -102,7 +135,11 @@ const Contact = ({ initialData, handleEdit }) => {
                       value={data.LOCATION || ''}
                       onChange={handleInputChange}
                       disabled={saving}
+                      invalid={!!formErrors.LOCATION}
                     />
+                    {formErrors.LOCATION && (
+                      <div className="text-danger small">{formErrors.LOCATION}</div>
+                    )}
                   </div>
                   <CButton color="primary" onClick={handleEditClick} disabled={saving}>
                     {saving ? 'Guardando...' : 'Editar'}

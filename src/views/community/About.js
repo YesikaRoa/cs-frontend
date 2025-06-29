@@ -14,18 +14,20 @@ import {
   CModalTitle,
 } from '@coreui/react'
 import AlertMessage from '../../components/ui/AlertMessage'
+import { aboutSectionSchema } from '../../schemas/about.schema'
 
-const MyCommunity = () => {
+const About = () => {
   const [visible, setVisible] = useState(false)
   const [editSection, setEditSection] = useState(null)
   const [info, setInfo] = useState({
-    Misión: { id: null, value: '' },
-    Visión: { id: null, value: '' },
-    'Quiénes Somos': { id: null, value: '' },
+    mission: { id: null, value: '' },
+    vision: { id: null, value: '' },
+    about: { id: null, value: '' },
   })
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(false)
   const [alertData, setAlertData] = useState(null)
+  const [formError, setFormError] = useState('')
 
   useEffect(() => {
     setLoading(true)
@@ -35,9 +37,9 @@ const MyCommunity = () => {
         const data = res.data.data
         const newInfo = { ...info }
         data.forEach((item) => {
-          if (item.title === 'MISSION') newInfo['Misión'] = { id: item.id, value: item.value }
-          if (item.title === 'VISION') newInfo['Visión'] = { id: item.id, value: item.value }
-          if (item.title === 'ABOUT') newInfo['Quiénes Somos'] = { id: item.id, value: item.value }
+          if (item.title === 'MISSION') newInfo['mission'] = { id: item.id, value: item.value }
+          if (item.title === 'VISION') newInfo['vision'] = { id: item.id, value: item.value }
+          if (item.title === 'ABOUT') newInfo['about'] = { id: item.id, value: item.value }
         })
         setInfo(newInfo)
         setLoading(false)
@@ -46,16 +48,26 @@ const MyCommunity = () => {
   }, [])
 
   const handleEdit = (section) => {
+    setVisible(true)
     setEditSection(section)
     setInputValue(info[section]?.value || '')
-    setVisible(true)
+    setFormError('')
   }
 
   const handleSave = async () => {
+    setFormError('')
+    try {
+      aboutSectionSchema.parse({ value: inputValue })
+    } catch (err) {
+      if (err.errors && err.errors[0]) {
+        setFormError(err.errors[0].message)
+        return
+      }
+    }
     try {
       const section = editSection
       if (!section) return
-      const title = section === 'Misión' ? 'MISSION' : section === 'Visión' ? 'VISION' : 'ABOUT'
+      const title = section === 'mission' ? 'MISSION' : section === 'vision' ? 'VISION' : 'ABOUT'
       const response = await communityApi.updateCommunityInfo(title, {
         title,
         value: inputValue,
@@ -74,6 +86,16 @@ const MyCommunity = () => {
     }
   }
 
+  const handleName = () => {
+    const sectionNames = {
+      mission: 'Misión',
+      vision: 'Visión',
+      about: '¿Quiénes Somos?',
+    }
+
+    return sectionNames[editSection] || ''
+  }
+
   return (
     <>
       <CModal
@@ -83,7 +105,7 @@ const MyCommunity = () => {
         aria-labelledby="VerticallyCenteredExample"
       >
         <CModalHeader>
-          <CModalTitle id="VerticallyCenteredExample">{editSection}</CModalTitle>
+          <CModalTitle id="VerticallyCenteredExample">{handleName()}</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CFormTextarea
@@ -92,7 +114,9 @@ const MyCommunity = () => {
             value={inputValue}
             rows={5}
             onChange={(e) => setInputValue(e.target.value)}
+            invalid={!!formError}
           />
+          {formError && <div className="text-danger small mt-2">{formError}</div>}
         </CModalBody>
         <CModalFooter>
           <CButton color="primary" onClick={handleSave}>
@@ -119,8 +143,8 @@ const MyCommunity = () => {
                 <p>Cargando contenido...</p>
               ) : (
                 <>
-                  <p>{info['Misión'].value}</p>
-                  <CButton color="primary" onClick={() => handleEdit('Misión')}>
+                  <p>{info['mission'].value}</p>
+                  <CButton color="primary" onClick={() => handleEdit('mission')}>
                     Editar
                   </CButton>
                 </>
@@ -136,8 +160,8 @@ const MyCommunity = () => {
                 <p>Cargando contenido...</p>
               ) : (
                 <>
-                  <p>{info['Visión'].value}</p>
-                  <CButton color="primary" onClick={() => handleEdit('Visión')}>
+                  <p>{info['vision'].value}</p>
+                  <CButton color="primary" onClick={() => handleEdit('vision')}>
                     Editar
                   </CButton>
                 </>
@@ -153,8 +177,8 @@ const MyCommunity = () => {
                 <p>Cargando contenido...</p>
               ) : (
                 <>
-                  <p>{info['Quiénes Somos'].value}</p>
-                  <CButton color="primary" onClick={() => handleEdit('Quiénes Somos')}>
+                  <p>{info['about'].value}</p>
+                  <CButton color="primary" onClick={() => handleEdit('about')}>
                     Editar
                   </CButton>
                 </>
@@ -167,4 +191,4 @@ const MyCommunity = () => {
   )
 }
 
-export default MyCommunity
+export default About
