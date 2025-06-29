@@ -1,8 +1,0 @@
-.excel-gradient-btn {
-  background: linear-gradient(90deg, #019432 0%, #2afc3b 100%);
-  border: none;
-  color: #fff !important;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(67, 233, 123, 0.15);
-  transition: background 0.3s;
-}

@@ -26,7 +26,6 @@ import communityApi from '../../api/endpoints/communityApi'
 import { createUserSchema, updateUserSchema } from '../../schemas/users.schema.js'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import './Users.css'
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -182,35 +181,42 @@ const Users = () => {
   }, [])
 
   const exportToExcel = () => {
-  const data = users.map(user => ({
-    Nombre: user.first_name,
-    Apellido: user.last_name,
-    Teléfono: user.phone,
-    Email: user.email,
-    Comunidad: communities.find(c => c.id === (user.community_id || user.community?.id))?.name || user.community?.name || 'No disponible',
-    Rol: roles.find(r => r.id === (user.rol_id || user.role?.id))?.name || user.role?.name || 'No disponible'
-  }))
-  const worksheet = XLSX.utils.json_to_sheet(data)
+    const data = users.map((user) => ({
+      Nombre: user.first_name,
+      Apellido: user.last_name,
+      Teléfono: user.phone,
+      Email: user.email,
+      Comunidad:
+        communities.find((c) => c.id === (user.community_id || user.community?.id))?.name ||
+        user.community?.name ||
+        'No disponible',
+      Rol:
+        roles.find((r) => r.id === (user.rol_id || user.role?.id))?.name ||
+        user.role?.name ||
+        'No disponible',
+    }))
+    const worksheet = XLSX.utils.json_to_sheet(data)
 
-  // Esto es para ajustar el ancho de las columnas
-  const cols = Object.keys(data[0]).map(key => ({
-    wch: Math.max(
-      key.length,
-      ...data.map(row => (row[key] ? row[key].toString().length : 0))
-    ) + 2 
-  }))
-  worksheet['!cols'] = cols
+    // Esto es para ajustar el ancho de las columnas
+    const cols = Object.keys(data[0]).map((key) => ({
+      wch:
+        Math.max(key.length, ...data.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
+    }))
+    worksheet['!cols'] = cols
 
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Usuarios')
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-  saveAs(blob, 'UsuariosRegistrados.xlsx')
-}
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Usuarios')
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
+    saveAs(blob, 'usuarios.xlsx')
+  }
 
   return (
     <div className="p-3">
       <div className="d-flex justify-content-end mb-3">
+        <CButton className="excel-gradient-btn text-white me-2" onClick={exportToExcel}>
+          Exportar a Excel
+        </CButton>
         <CButton color="primary" onClick={() => setAddModal(true)}>
           <CIcon icon={cilUserPlus} /> Crear Usuario
         </CButton>
@@ -276,11 +282,6 @@ const Users = () => {
           </CTable>
         </CCardBody>
       </CCard>
-      <div className="d-flex justify-content-center my-3">
-        <CButton className="excel-gradient-btn text-white" onClick={exportToExcel}>
-          Exportar a Excel
-        </CButton>
-      </div>
 
       <CModal visible={viewModal} onClose={() => setViewModal(false)}>
         <CModalHeader onClose={() => setViewModal(false)}>
