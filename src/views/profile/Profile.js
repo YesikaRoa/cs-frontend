@@ -11,6 +11,9 @@ import {
   CForm,
   CFormInput,
   CModalTitle,
+  CContainer,
+  CRow,
+  CCol,
 } from '@coreui/react'
 import AlertMessage from '../../components/ui/AlertMessage'
 
@@ -20,7 +23,7 @@ import { z } from 'zod'
 import './profile.css'
 import CIcon from '@coreui/icons-react'
 import { cilHttps, cilPencil } from '@coreui/icons'
-import defaultProfile from '../../assets/images/default-profile1.jpg'
+import defaultProfile from '../../assets/images/image-default.png'
 
 const updateProfileSchema = z.object({
   first_name: z
@@ -55,7 +58,6 @@ const Profile = () => {
   })
   const [formErrors, setFormErrors] = useState({})
   const [alertData, setAlertData] = useState(null)
-  const [showSuccess, setShowSuccess] = useState(false)
   const [loadingUser, setLoadingUser] = useState(true)
   const [showWarning, setShowWarning] = useState(false)
   const [showWrongPassword, setShowWrongPassword] = useState(false)
@@ -84,7 +86,6 @@ const Profile = () => {
       setShowPasswordModal(false)
       setPassword({ currentPassword: '', newPassword: '', confirmNewPassword: '' })
       setSuccessMessage('Contraseña actualizada correctamente')
-      setShowSuccess(true)
     } catch (error) {
       if (
         error?.response?.status === 401 ||
@@ -132,7 +133,6 @@ const Profile = () => {
 
       setShowEditModal(false)
       setSuccessMessage('Perfil editado correctamente')
-      setShowSuccess(true)
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -185,56 +185,62 @@ const Profile = () => {
           {successMessage}
         </div>
       )}
-      <CCard style={{ width: '60%', maxWidth: '800px', position: 'relative' }}>
-        <CCardHeader>
-          <h5 className="text-center w-100">Información Personal</h5>
-        </CCardHeader>
-        <CCardBody>
-          <div className="d-flex justify-content-center mb-4">
-            <div className="profile-image-circle">
-              <img
-                src={userInfo?.url_image || defaultProfile}
-                alt="Imagen de perfil"
-                className="profile-image-inside-circle"
-              />
-            </div>
-          </div>
-          <div className="text-center mb-4">
-            <div className="mb-2">
-              <strong>Nombre:</strong> {userInfo?.first_name}
-            </div>
-            <div className="mb-2">
-              <strong>Apellido:</strong> {userInfo?.last_name}
-            </div>
-            <div className="mb-2">
-              <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
-            </div>
-            <div className="mb-2">
-              <strong>Email:</strong> {userInfo?.email}
-            </div>
-            <div className="mb-2">
-              <strong>Comunidad:</strong> {userInfo?.community?.name}
-            </div>
-            <div className="mb-2">
-              <strong>Rol:</strong> {getRoleNameByKey(userInfo?.role?.name)}
-            </div>
-          </div>
-          <div className="d-flex justify-content-center gap-3">
-            <CButton color="primary" onClick={openEditModal} disabled={loadingUser}>
-              <CIcon icon={cilPencil} /> Editar Información
-            </CButton>
-            <CButton
-              color="info"
-              className="text-white"
-              onClick={() => setShowPasswordModal(true)}
-              disabled={loadingUser}
-            >
-              <CIcon icon={cilHttps} className="me-2" />
-              Cambiar Contraseña
-            </CButton>
-          </div>
-        </CCardBody>
-      </CCard>
+      <CContainer>
+        <CRow className="justify-content-center component-space">
+          <CCol xs={12} md={6}>
+            <CCard>
+              <CCardHeader>
+                <h5 className="text-center w-100">Información Personal</h5>
+              </CCardHeader>
+              <CCardBody>
+                <div className="d-flex justify-content-center mb-4">
+                  <div className="profile-image-circle">
+                    <img
+                      src={userInfo?.url_image || defaultProfile}
+                      alt="Imagen de perfil"
+                      className="profile-image-inside-circle"
+                    />
+                  </div>
+                </div>
+                <div className="text-center mb-4">
+                  <div className="mb-2">
+                    <strong>Nombre:</strong> {userInfo?.first_name}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Apellido:</strong> {userInfo?.last_name}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Email:</strong> {userInfo?.email}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Comunidad:</strong> {userInfo?.community?.name}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Rol:</strong> {getRoleNameByKey(userInfo?.role?.name)}
+                  </div>
+                </div>
+                <div className="d-flex justify-content-center gap-3">
+                  <CButton color="primary" onClick={openEditModal} disabled={loadingUser}>
+                    <CIcon icon={cilPencil} /> Editar Información
+                  </CButton>
+                  <CButton
+                    color="info"
+                    className="text-white"
+                    onClick={() => setShowPasswordModal(true)}
+                    disabled={loadingUser}
+                  >
+                    <CIcon icon={cilHttps} className="me-2" />
+                    Cambiar Contraseña
+                  </CButton>
+                </div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow>
+      </CContainer>
 
       <CModal visible={showPasswordModal} onClose={() => setShowPasswordModal(false)}>
         <CModalHeader>Cambiar Contraseña</CModalHeader>

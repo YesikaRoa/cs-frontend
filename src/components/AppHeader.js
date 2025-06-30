@@ -17,7 +17,7 @@ import CIcon from '@coreui/icons-react'
 import { cilContrast, cilMenu, cilMoon, cilSun, cilExitToApp } from '@coreui/icons'
 
 import { AppBreadcrumb } from './index'
-import defaultProfile from '../assets/images/default-profile1.jpg'
+import defaultProfile from '../assets/images/image-default.png'
 
 const AppHeader = () => {
   const headerRef = useRef()
