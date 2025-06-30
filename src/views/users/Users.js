@@ -26,7 +26,7 @@ import communityApi from '../../api/endpoints/communityApi'
 import { createUserSchema, updateUserSchema } from '../../schemas/users.schema.js'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import './Users.css'
+import './users.css'
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -67,14 +67,14 @@ const Users = () => {
   }
 
   const handleImageChange = (e) => {
-  const file = e.target.files[0]
-  setImageFile(file)
-  if (file) {
-    setImagePreview(URL.createObjectURL(file))
-  } else {
-    setImagePreview(null)
+    const file = e.target.files[0]
+    setImageFile(file)
+    if (file) {
+      setImagePreview(URL.createObjectURL(file))
+    } else {
+      setImagePreview(null)
+    }
   }
-}
 
   const handleAddUser = async () => {
     // Esto es para validar con zod
@@ -181,7 +181,7 @@ const Users = () => {
       if (String(userInfoLocal.id) === String(userToEdit.id)) {
         const updatedUserInfo = {
           ...userInfoLocal, // Mantén los datos actuales
-          ...userToEdit,    // Aplica los cambios editados (nombre, email, etc.)
+          ...userToEdit, // Aplica los cambios editados (nombre, email, etc.)
           url_image: data.data?.url_image || userInfoLocal.url_image, // Actualiza imagen si viene nueva
         }
 
@@ -219,31 +219,35 @@ const Users = () => {
   }, [])
 
   const exportToExcel = () => {
-  const data = users.map(user => ({
-    Nombre: user.first_name,
-    Apellido: user.last_name,
-    Teléfono: user.phone,
-    Email: user.email,
-    Comunidad: communities.find(c => c.id === (user.community_id || user.community?.id))?.name || user.community?.name || 'No disponible',
-    Rol: roles.find(r => r.id === (user.rol_id || user.role?.id))?.name || user.role?.name || 'No disponible'
-  }))
-  const worksheet = XLSX.utils.json_to_sheet(data)
+    const data = users.map((user) => ({
+      Nombre: user.first_name,
+      Apellido: user.last_name,
+      Teléfono: user.phone,
+      Email: user.email,
+      Comunidad:
+        communities.find((c) => c.id === (user.community_id || user.community?.id))?.name ||
+        user.community?.name ||
+        'No disponible',
+      Rol:
+        roles.find((r) => r.id === (user.rol_id || user.role?.id))?.name ||
+        user.role?.name ||
+        'No disponible',
+    }))
+    const worksheet = XLSX.utils.json_to_sheet(data)
 
-  // Esto es para ajustar el ancho de las columnas
-  const cols = Object.keys(data[0]).map(key => ({
-    wch: Math.max(
-      key.length,
-      ...data.map(row => (row[key] ? row[key].toString().length : 0))
-    ) + 2 
-  }))
-  worksheet['!cols'] = cols
+    // Esto es para ajustar el ancho de las columnas
+    const cols = Object.keys(data[0]).map((key) => ({
+      wch:
+        Math.max(key.length, ...data.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
+    }))
+    worksheet['!cols'] = cols
 
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Usuarios')
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-  saveAs(blob, 'UsuariosRegistrados.xlsx')
-}
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Usuarios')
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
+    saveAs(blob, 'UsuariosRegistrados.xlsx')
+  }
 
   return (
     <div className="p-3">
@@ -385,12 +389,14 @@ const Users = () => {
           setImagePreview(null)
         }}
       >
-        <CModalHeader onClose={() => {
-          setAddModal(false)
-          setFormErrors({})
-          setImageFile(null)
-          setImagePreview(null)
-        }}>
+        <CModalHeader
+          onClose={() => {
+            setAddModal(false)
+            setFormErrors({})
+            setImageFile(null)
+            setImagePreview(null)
+          }}
+        >
           <CModalTitle>Añadir nuevo usuario</CModalTitle>
         </CModalHeader>
         <CModalBody>
@@ -498,18 +504,23 @@ const Users = () => {
         </CModalFooter>
       </CModal>
 
-        <CModal visible={editModal} onClose={() => {
+      <CModal
+        visible={editModal}
+        onClose={() => {
+          setEditModal(false)
+          setFormErrors({})
+          setImageFile(null)
+          setImagePreview(null)
+        }}
+      >
+        <CModalHeader
+          onClose={() => {
             setEditModal(false)
             setFormErrors({})
             setImageFile(null)
             setImagePreview(null)
-            }}>
-        <CModalHeader onClose={() => {
-            setEditModal(false)
-            setFormErrors({})
-            setImageFile(null)
-            setImagePreview(null)
-            }}>
+          }}
+        >
           <CModalTitle>Editar usuario</CModalTitle>
         </CModalHeader>
         <CModalBody>
@@ -579,6 +590,15 @@ const Users = () => {
                   </option>
                 ))}
               </CFormSelect>
+              <CFormInput
+                type="file"
+                label="Imagen"
+                name="url_image"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="mb-2"
+              />
+
               {(imagePreview || userToEdit?.url_image) && (
                 <div className="mb-3 text-center user-image-container">
                   <img
@@ -588,14 +608,6 @@ const Users = () => {
                   />
                 </div>
               )}
-              <CFormInput
-                type="file"
-                label="Imagen"
-                name="url_image"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="mb-2"
-              />
             </CForm>
           )}
         </CModalBody>
