@@ -17,32 +17,30 @@ import AlertMessage from '../../components/ui/AlertMessage'
 import profileApi from '../../api/endpoints/profileApi'
 import { getRoleNameByKey } from '../../utils/roles'
 import { z } from 'zod'
-import './Profile.css'
+import './profile.css'
 import CIcon from '@coreui/icons-react'
 import { cilHttps, cilPencil } from '@coreui/icons'
-import defaultProfile from '../../assets/images/default-profile6.png'
+import defaultProfile from '../../assets/images/default-profile1.jpg'
 
 const updateProfileSchema = z.object({
-  first_name: z.string()
+  first_name: z
+    .string()
     .min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres')
     .max(50, 'El nombre no puede exceder 50 caracteres'),
-  last_name: z.string()
+  last_name: z
+    .string()
     .min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres')
     .max(50, 'El apellido no puede exceder 50 caracteres'),
-  phone: z.string()
-    .max(20, 'El teléfono no puede tener más de 15 caracteres')
-    .optional(),
-  email: z.string()
-    .email('El correo debe ser válido'),
+  phone: z.string().max(20, 'El teléfono no puede tener más de 15 caracteres').optional(),
+  email: z.string().email('El correo debe ser válido'),
 })
 
 const changePasswordSchema = z.object({
-  currentPassword: z.string()
+  currentPassword: z
+    .string()
     .min(6, 'La contraseña actual es obligatoria y debe tener al menos 6 caracteres'),
-  newPassword: z.string()
-    .min(6, 'La nueva contraseña debe tener al menos 6 caracteres'),
-  confirmNewPassword: z.string()
-    .min(6, 'La confirmación debe tener al menos 6 caracteres'),
+  newPassword: z.string().min(6, 'La nueva contraseña debe tener al menos 6 caracteres'),
+  confirmNewPassword: z.string().min(6, 'La confirmación debe tener al menos 6 caracteres'),
 })
 
 const Profile = () => {
@@ -50,7 +48,11 @@ const Profile = () => {
   const [showEditModal, setShowEditModal] = useState(false)
   const [userInfo, setUserInfo] = useState({})
   const [editInfo, setEditInfo] = useState({})
-  const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' })
+  const [password, setPassword] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  })
   const [formErrors, setFormErrors] = useState({})
   const [alertData, setAlertData] = useState(null)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -140,7 +142,7 @@ const Profile = () => {
     profileApi
       .getProfile()
       .then((response) => {
-        // Esto es para obtener la imagen del localstorage 
+        // Esto es para obtener la imagen del localstorage
         const userInfoLocal = localStorage.getItem('userInfo')
         let url_image = null
         if (userInfoLocal) {
@@ -175,7 +177,11 @@ const Profile = () => {
   return (
     <div className="d-flex justify-content-center align-items-center flex-column">
       {successMessage && (
-        <div className="alert alert-success text-center w-100" role="alert" style={{ maxWidth: 600 }}>
+        <div
+          className="alert alert-success text-center w-100"
+          role="alert"
+          style={{ maxWidth: 600 }}
+        >
           {successMessage}
         </div>
       )}
@@ -223,7 +229,7 @@ const Profile = () => {
               onClick={() => setShowPasswordModal(true)}
               disabled={loadingUser}
             >
-              <CIcon icon={cilHttps} className='me-2' />
+              <CIcon icon={cilHttps} className="me-2" />
               Cambiar Contraseña
             </CButton>
           </div>
@@ -231,9 +237,7 @@ const Profile = () => {
       </CCard>
 
       <CModal visible={showPasswordModal} onClose={() => setShowPasswordModal(false)}>
-        <CModalHeader>
-          Cambiar Contraseña
-        </CModalHeader>
+        <CModalHeader>Cambiar Contraseña</CModalHeader>
         <CModalBody>
           <CForm>
             <CFormInput
@@ -333,9 +337,7 @@ const Profile = () => {
         <CModalHeader>
           <CModalTitle>Contraseña incorrecta</CModalTitle>
         </CModalHeader>
-        <CModalBody>
-          La contraseña ingresada es incorrecta
-        </CModalBody>
+        <CModalBody>La contraseña ingresada es incorrecta</CModalBody>
         <CModalFooter>
           <CButton color="primary" onClick={() => setShowWrongPassword(false)}>
             Aceptar

@@ -17,7 +17,7 @@ import CIcon from '@coreui/icons-react'
 import { cilContrast, cilMenu, cilMoon, cilSun, cilExitToApp } from '@coreui/icons'
 
 import { AppBreadcrumb } from './index'
-import defaultProfile from '../assets/images/default-profile6.png'
+import defaultProfile from '../assets/images/default-profile1.jpg'
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -28,7 +28,7 @@ const AppHeader = () => {
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
   const [userInfo, setUserInfo] = useState(() =>
-    JSON.parse(localStorage.getItem('userInfo') || '{}')
+    JSON.parse(localStorage.getItem('userInfo') || '{}'),
   )
 
   const handleLogout = () => {
@@ -74,27 +74,12 @@ const AppHeader = () => {
               border: '2px solid #eee',
             }}
           />
-          <span style={{ fontWeight: 500 }}>¡Bienvenido {userInfo?.first_name} {userInfo?.last_name}!</span>
+          <span style={{ fontWeight: 500 }}>
+            ¡Bienvenido {userInfo?.first_name} {userInfo?.last_name}!
+          </span>
         </div>
 
         <CHeaderNav className="align-items-center">
-          <li className="nav-item py-1">
-            <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
-
-          <CDropdown variant="nav-item" placement="bottom-end">
-            <CDropdownToggle caret={false} className="d-flex align-items-center">
-              <CIcon icon={cilExitToApp} size="lg" />
-            </CDropdownToggle>
-            <CDropdownMenu>
-              <CDropdownItem disabled>{userInfo?.email}</CDropdownItem>
-              <CDropdownItem onClick={handleLogout}>
-                <CIcon icon={cilExitToApp} className="me-2" />
-                Cerrar sesión
-              </CDropdownItem>
-            </CDropdownMenu>
-          </CDropdown>
-
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
@@ -139,6 +124,14 @@ const AppHeader = () => {
               </CDropdownItem>
             </CDropdownMenu>
           </CDropdown>
+
+          <li className="nav-item py-1">
+            <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
+          </li>
+
+          <div className="d-flex align-items-center mx-2">
+            <CIcon icon={cilExitToApp} size="lg" onClick={handleLogout} />
+          </div>
         </CHeaderNav>
       </CContainer>
 
