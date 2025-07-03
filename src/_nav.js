@@ -1,8 +1,9 @@
 import CIcon from '@coreui/icons-react'
 import { cilNotes, cilPeople, cilUser, cilLocationPin, cilChart } from '@coreui/icons'
 import { CNavItem } from '@coreui/react'
+import { getUserRoleFromToken } from './utils/auth'
 
-const _nav = [
+const allNav = [
   {
     component: CNavItem,
     name: 'Dashboard',
@@ -34,4 +35,16 @@ const _nav = [
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
   },
 ]
+
+
+
+
+const userRole = getUserRoleFromToken();
+let _nav = allNav;
+if (userRole === 'Street_Leader') {
+  _nav = allNav.filter((item) =>
+    ['Dashboard', 'Publicaciones', 'Perfil'].includes(item.name)
+  );
+}
+
 export default _nav
