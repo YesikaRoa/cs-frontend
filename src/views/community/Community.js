@@ -23,7 +23,7 @@ const Community = () => {
   const [activeTab, setActiveTab] = useState(1)
 
   useEffect(() => {
-    fetchCommunityInformation()
+    // fetchCommunityInformation()
   }, [])
 
   const fetchCommunityInformation = async () => {
