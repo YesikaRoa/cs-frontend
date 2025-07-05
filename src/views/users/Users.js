@@ -19,7 +19,7 @@ import {
   CFormSelect,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilInfo, cilUserPlus } from '@coreui/icons'
+import { cilPencil, cilTrash, cilInfo, cilUserPlus, cilFolderOpen } from '@coreui/icons'
 import AlertMessage from '../../components/ui/AlertMessage'
 import userApi from '../../api/endpoints/userApi'
 import communityApi from '../../api/endpoints/communityApi'
@@ -246,12 +246,15 @@ const Users = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Usuarios')
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    saveAs(blob, 'UsuariosRegistrados.xlsx')
+    saveAs(blob, 'usuarios.xlsx')
   }
 
   return (
     <div className="p-3">
       <div className="d-flex justify-content-end mb-3">
+        <CButton color="success" className="text-white me-2" onClick={exportToExcel}>
+          <CIcon icon={cilFolderOpen} /> Exportar a Excel
+        </CButton>
         <CButton color="primary" onClick={() => setAddModal(true)}>
           <CIcon icon={cilUserPlus} /> Crear Usuario
         </CButton>
@@ -317,11 +320,6 @@ const Users = () => {
           </CTable>
         </CCardBody>
       </CCard>
-      <div className="d-flex justify-content-center my-3">
-        <CButton className="excel-gradient-btn text-white" onClick={exportToExcel}>
-          Exportar a Excel
-        </CButton>
-      </div>
 
       <CModal visible={viewModal} onClose={() => setViewModal(false)}>
         <CModalHeader onClose={() => setViewModal(false)}>
