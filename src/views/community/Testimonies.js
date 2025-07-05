@@ -20,9 +20,10 @@ import {
   CFormInput,
   CFormTextarea,
   CFormSelect,
+  CBadge,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilPlus } from '@coreui/icons'
+import { cilPencil, cilTrash, cilPlus, cilCheck } from '@coreui/icons'
 import testimoniesApi from '../../api/endpoints/testimoniesApi'
 import communityApi from '../../api/endpoints/communityApi'
 import AlertMessage from '../../components/ui/AlertMessage'
@@ -144,6 +145,28 @@ const Testimonies = () => {
     }
   }
 
+  const handleApprove = async (testimonyId) => {
+    try {
+      const response = await testimoniesApi.changeTestimonyStatus(testimonyId, 'published')
+      setAlertData({ response: response.data, type: 'success' })
+      fetchTestimonies()
+    } catch (error) {
+      setAlertData({
+        response: { message: error?.response?.data?.message || 'Error al aprobar el testimonio' },
+        type: 'danger',
+      })
+    }
+  }
+
+  const getNameStatus = (status) => {
+    const statuses = {
+      published: ['Publicado', 'success'],
+      pending_approval: ['Pendiente', 'warning'],
+      draft: ['Eliminado', 'secondary'], // Funcion de Joan
+    }
+    return statuses[status] || ['Desconocido', 'secondary']
+  }
+
   return (
     <div className="p-4">
       <CModal
@@ -246,19 +269,20 @@ const Testimonies = () => {
                 <CTableHeaderCell>Comentario</CTableHeaderCell>
                 <CTableHeaderCell>Comunidad</CTableHeaderCell>
                 <CTableHeaderCell>Fecha de Creación</CTableHeaderCell>
+                <CTableHeaderCell>Estado</CTableHeaderCell> {/* NUEVO */}
                 <CTableHeaderCell>Acciones</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
               {loading ? (
                 <CTableRow>
-                  <CTableDataCell colSpan={4} className="text-center">
+                  <CTableDataCell colSpan={5} className="text-center">
                     Cargando testimonios...
                   </CTableDataCell>
                 </CTableRow>
               ) : testimonies.length === 0 ? (
                 <CTableRow>
-                  <CTableDataCell colSpan={4} className="text-center">
+                  <CTableDataCell colSpan={5} className="text-center">
                     No hay testimonios registrados.
                   </CTableDataCell>
                 </CTableRow>
@@ -269,6 +293,11 @@ const Testimonies = () => {
                     <CTableDataCell>{t.comment}</CTableDataCell>
                     <CTableDataCell>{t.community?.name}</CTableDataCell>
                     <CTableDataCell>{formatDateTime(t.created_at)}</CTableDataCell>
+                    <CTableDataCell>
+                      <CBadge color={getNameStatus(t.status)?.[1]}>
+                        {getNameStatus(t.status)?.[0]}
+                      </CBadge>
+                    </CTableDataCell>
                     <CTableDataCell>
                       <div className="d-flex">
                         <CButton
@@ -287,6 +316,16 @@ const Testimonies = () => {
                         >
                           <CIcon icon={cilTrash} className="text-white" />
                         </CButton>
+                        {t.status === 'pending_approval' && (
+                          <CButton
+                            color="success"
+                            size="sm"
+                            className="ms-2"
+                            onClick={() => handleApprove(t.id)}
+                          >
+                            <CIcon icon={cilCheck} style={{ color: 'white' }} />
+                          </CButton>
+                        )}
                       </div>
                     </CTableDataCell>
                   </CTableRow>
