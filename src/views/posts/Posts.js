@@ -1,15 +1,7 @@
 import { useState, useEffect } from 'react'
-import { getUserRoleFromToken } from '../../utils/auth'
-const getUserIdFromToken = () => {
-  try {
-    const token = localStorage.getItem('authToken');
-    if (!token) return null;
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.user_id || payload.id || null;
-  } catch {
-    return null;
-  }
-};
+import { getUserInfoFromToken } from '../../utils/auth'
+const { id: userId, rol_name: userRole } = getUserInfoFromToken()
+
 import {
   CButton,
   CCard,
@@ -68,8 +60,6 @@ const Posts = () => {
   const [infoModal, setInfoModal] = useState(false)
   const [selectedPost, setSelectedPost] = useState(null)
   const [formErrors, setFormErrors] = useState({})
-  const userRole = getUserRoleFromToken();
-  const userId = String(getUserIdFromToken());
 
   const fetchPosts = async () => {
     setLoadingPosts(true)
@@ -332,7 +322,7 @@ const Posts = () => {
                   <h3>Subir Imagen</h3>
                   <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
                   <CFormInput type="file" id="image" accept="image/*" onChange={handleChange} />
-                  
+
                   {imagePreview && (
                     <div style={{ marginTop: 10 }}>
                       <img
@@ -385,34 +375,22 @@ const Posts = () => {
           {selectedPost && (
             <div>
               <ul>
-                <li>
-                  <strong>Título:</strong> {selectedPost.title}
-                </li>
-                <li>
-                  <strong>Contenido:</strong> {selectedPost.content}
-                </li>
-                <li>
-                  <strong>Estado:</strong> {getNameStatus(selectedPost.status)[0]}
-                </li>
-                <li>
-                  <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)}
-                </li>
-                <li>
-                  <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
-                  {selectedPost.user?.last_name}
-                </li>
-                <li>
-                  <strong>Comunidad:</strong> {selectedPost.community?.name}
-                </li>
-                <li>
-                  <strong>Categoría:</strong> {getCategoryName(selectedPost)}
-                </li>
+                <strong>Título:</strong> {selectedPost.title} <br />
+                <strong>Contenido:</strong> {selectedPost.content} <br />
+                <strong>Estado:</strong> {getNameStatus(selectedPost.status)[0]} <br />
+                <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)} <br />
+                <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
+                {selectedPost.user?.last_name} <br />
+                <strong>Comunidad:</strong> {selectedPost.community?.name} <br />
+                <strong>Categoría:</strong> {getCategoryName(selectedPost)} <br />
               </ul>
-              <img
-                src={selectedPost.image || selectedPost.images?.[0]?.url}
-                alt="Imagen de la publicación"
-                style={{ maxWidth: '100%', borderRadius: 8, margin: 'auto', display: 'flex' }}
-              />
+              {selectedPost.images && selectedPost.images.length > 0 && (
+                <img
+                  src={selectedPost.images?.[0]?.url}
+                  alt="Imagen de la publicación"
+                  style={{ maxWidth: '100%', borderRadius: 8, margin: 'auto', display: 'flex' }}
+                />
+              )}
             </div>
           )}
         </CModalBody>
@@ -471,20 +449,15 @@ const Posts = () => {
                   </CTableHead>
                   <CTableBody>
                     {posts.map((post) => {
-                      const postUserId = String(post.user_id ?? post.user?.id ?? '');
-                      const isOwnPost = postUserId === userId;
-                      
-                      let  canEdit = isOwnPost;
-                      let  canDelete = isOwnPost;
-                      let  canApprove = false;
-                      if (userRole === 'Admin') {
-                        canEdit = true;
-                        canDelete = true;
-                        canApprove = true;
-                      } else if (userRole === 'Community_Leader') {
-                        canEdit = true;
-                        canDelete = true;
-                        canApprove = true;
+                      const postUserId = post.user_id
+                      const isOwnPost = postUserId === userId
+                      let canEdit = isOwnPost
+                      let canDelete = isOwnPost
+                      let canApprove = false
+                      if (['Admin', 'Community_Leader'].includes(userRole)) {
+                        canEdit = true
+                        canDelete = true
+                        canApprove = true
                       }
                       return (
                         <CTableRow key={post.id}>
@@ -542,7 +515,7 @@ const Posts = () => {
                             </div>
                           </CTableDataCell>
                         </CTableRow>
-                      );
+                      )
                     })}
                   </CTableBody>
                 </CTable>
