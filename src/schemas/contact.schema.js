@@ -5,7 +5,7 @@ const venezuelaPhoneRegex = /^(?:(?:\+58|0058))?(?:0)?(212|234|235|238|239|240|2
 export const contactSchema = z.object({
   PHONE_NUMBER: z.string()
     .regex(venezuelaPhoneRegex, 'Debe ser un número telefónico válido (ej: 02761234567, 04161234567)'),
-  EMAIL: z.string().email('Debe ser un correo electrónico válido'),
+  EMAIL: z.string().email('El correo debe ser válido (no se permiten caracteres especiales como "Ñ" o acentos)'),
   LOCATION: z.string().min(5, 'La dirección debe tener al menos 5 caracteres'),
 })
 

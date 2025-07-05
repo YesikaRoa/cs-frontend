@@ -9,7 +9,7 @@ export const createUserSchema = z.object({
   last_name: z.string().min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres'),
   phone: z.string()
     .regex(venezuelaPhoneRegex, 'Debe ser un número telefónico válido (ej: 02761234567, 04161234567)'),
-  email: z.string().email('Debe ser un correo electrónico válido'),
+  email: z.string().email('El correo debe ser válido (no se permiten caracteres especiales como "Ñ" o acentos)'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
   community_id: z.union([z.string(), z.number()]).refine(val => String(val).length > 0, {
     message: 'Debe seleccionar una comunidad',

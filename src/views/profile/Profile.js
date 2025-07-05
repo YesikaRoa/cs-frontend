@@ -19,32 +19,11 @@ import AlertMessage from '../../components/ui/AlertMessage'
 
 import profileApi from '../../api/endpoints/profileApi'
 import { getRoleNameByKey } from '../../utils/roles'
-import { z } from 'zod'
+import { updateProfileSchema, changePasswordSchema } from '../../schemas/profile.schema'
 import './profile.css'
 import CIcon from '@coreui/icons-react'
 import { cilHttps, cilPencil } from '@coreui/icons'
 import defaultProfile from '../../assets/images/image-default.png'
-
-const updateProfileSchema = z.object({
-  first_name: z
-    .string()
-    .min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres')
-    .max(50, 'El nombre no puede exceder 50 caracteres'),
-  last_name: z
-    .string()
-    .min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres')
-    .max(50, 'El apellido no puede exceder 50 caracteres'),
-  phone: z.string().max(20, 'El teléfono no puede tener más de 15 caracteres').optional(),
-  email: z.string().email('El correo debe ser válido'),
-})
-
-const changePasswordSchema = z.object({
-  currentPassword: z
-    .string()
-    .min(6, 'La contraseña actual es obligatoria y debe tener al menos 6 caracteres'),
-  newPassword: z.string().min(6, 'La nueva contraseña debe tener al menos 6 caracteres'),
-  confirmNewPassword: z.string().min(6, 'La confirmación debe tener al menos 6 caracteres'),
-})
 
 const Profile = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
@@ -62,6 +41,8 @@ const Profile = () => {
   const [showWarning, setShowWarning] = useState(false)
   const [showWrongPassword, setShowWrongPassword] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
 
   const handleChangePassword = async () => {
     const result = changePasswordSchema.safeParse(password)
@@ -113,28 +94,35 @@ const Profile = () => {
     }
     setFormErrors({})
     try {
-      const payload = {
-        first_name: editInfo.first_name,
-        last_name: editInfo.last_name,
-        email: editInfo.email,
-        phone: editInfo.phone,
+      const formData = new FormData()
+      Object.entries(editInfo).forEach(([key, value]) => {
+        formData.append(key, value)
+      })
+      if (imageFile) {
+        formData.append('image', imageFile)
       }
-      const response = await profileApi.editProfile(payload)
-
-      const updatedUserInfo = {
-        ...userInfo, // conserva todos los datos previos
-        ...editInfo, // actualiza solo los campos modificados
-        url_image: response.data.url_image || userInfo.url_image, //Esto no sirvióxd
-      }
-
-      setUserInfo(updatedUserInfo)
-      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+      const response = await profileApi.editProfile(formData)
+      const { data } = await profileApi.getProfile()
+      setUserInfo(data)
+      localStorage.setItem('userInfo', JSON.stringify(data))
       window.dispatchEvent(new Event('userInfoUpdated'))
 
       setShowEditModal(false)
-      setSuccessMessage('Perfil editado correctamente')
+      setAlertData({ response: response.data, type: 'success' }) // Ahora sí funciona esto
+      setImageFile(null)
+      setImagePreview(null)
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
+    }
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    setImageFile(file)
+    if (file) {
+      setImagePreview(URL.createObjectURL(file))
+    } else {
+      setImagePreview(null)
     }
   }
 
@@ -285,7 +273,15 @@ const Profile = () => {
         </CModalFooter>
       </CModal>
 
-      <CModal visible={showEditModal} onClose={() => setShowEditModal(false)}>
+      <CModal
+        visible={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setFormErrors({})
+          setImageFile(null)
+          setImagePreview(null)
+        }}
+      >
         <CModalHeader>Editar Información Personal</CModalHeader>
         <CModalBody>
           <CForm>
@@ -321,6 +317,23 @@ const Profile = () => {
               invalid={!!formErrors.email}
               feedback={formErrors.email}
             />
+            <CFormInput
+              type="file"
+              label="Imagen"
+              name="url_image"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="mb-2"
+            />
+            {(imagePreview || userInfo?.url_image) && (
+              <div className="mb-3 user-image-container">
+                <img
+                  src={imagePreview || userInfo.url_image}
+                  alt="preview"
+                  className="preview-image"
+                />
+              </div>
+            )}
           </CForm>
         </CModalBody>
         <CModalFooter>

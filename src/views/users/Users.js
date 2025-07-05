@@ -588,24 +588,6 @@ const Users = () => {
                   </option>
                 ))}
               </CFormSelect>
-              <CFormInput
-                type="file"
-                label="Imagen"
-                name="url_image"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="mb-2"
-              />
-
-              {(imagePreview || userToEdit?.url_image) && (
-                <div className="mb-3 text-center user-image-container">
-                  <img
-                    src={imagePreview || userToEdit.url_image}
-                    alt="preview"
-                    className="preview-image"
-                  />
-                </div>
-              )}
             </CForm>
           )}
         </CModalBody>
