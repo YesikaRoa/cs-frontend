@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { getUserRoleFromToken } from '../../utils/auth'
+import { getUserInfoFromToken } from '../../utils/auth'
+const { id: userId, rol_name: userRole } = getUserInfoFromToken()
+
 import {
   CButton,
   CCard,
@@ -58,7 +60,6 @@ const Posts = () => {
   const [infoModal, setInfoModal] = useState(false)
   const [selectedPost, setSelectedPost] = useState(null)
   const [formErrors, setFormErrors] = useState({})
-  const userRole = getUserRoleFromToken()
 
   const fetchPosts = async () => {
     setLoadingPosts(true)
@@ -321,7 +322,7 @@ const Posts = () => {
                   <h3>Subir Imagen</h3>
                   <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
                   <CFormInput type="file" id="image" accept="image/*" onChange={handleChange} />
-                  
+
                   {imagePreview && (
                     <div style={{ marginTop: 10 }}>
                       <img
@@ -374,34 +375,22 @@ const Posts = () => {
           {selectedPost && (
             <div>
               <ul>
-                <li>
-                  <strong>Título:</strong> {selectedPost.title}
-                </li>
-                <li>
-                  <strong>Contenido:</strong> {selectedPost.content}
-                </li>
-                <li>
-                  <strong>Estado:</strong> {getNameStatus(selectedPost.status)[0]}
-                </li>
-                <li>
-                  <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)}
-                </li>
-                <li>
-                  <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
-                  {selectedPost.user?.last_name}
-                </li>
-                <li>
-                  <strong>Comunidad:</strong> {selectedPost.community?.name}
-                </li>
-                <li>
-                  <strong>Categoría:</strong> {getCategoryName(selectedPost)}
-                </li>
+                <strong>Título:</strong> {selectedPost.title} <br />
+                <strong>Contenido:</strong> {selectedPost.content} <br />
+                <strong>Estado:</strong> {getNameStatus(selectedPost.status)[0]} <br />
+                <strong>Fecha de creación:</strong> {formatDateTime(selectedPost.created_at)} <br />
+                <strong>Publicado por:</strong> {selectedPost.user?.first_name}{' '}
+                {selectedPost.user?.last_name} <br />
+                <strong>Comunidad:</strong> {selectedPost.community?.name} <br />
+                <strong>Categoría:</strong> {getCategoryName(selectedPost)} <br />
               </ul>
-              <img
-                src={selectedPost.image || selectedPost.images?.[0]?.url}
-                alt="Imagen de la publicación"
-                style={{ maxWidth: '100%', borderRadius: 8, margin: 'auto', display: 'flex' }}
-              />
+              {selectedPost.images && selectedPost.images.length > 0 && (
+                <img
+                  src={selectedPost.images?.[0]?.url}
+                  alt="Imagen de la publicación"
+                  style={{ maxWidth: '100%', borderRadius: 8, margin: 'auto', display: 'flex' }}
+                />
+              )}
             </div>
           )}
         </CModalBody>
@@ -459,49 +448,61 @@ const Posts = () => {
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {posts.map((post) => (
-                      <CTableRow key={post.id}>
-                        <CTableDataCell>{post.title}</CTableDataCell>
-                        <CTableDataCell>{getCategoryName(post)}</CTableDataCell>
-                        <CTableDataCell>
-                          <CBadge color={getNameStatus(post.status)[1]}>
-                            {getNameStatus(post.status)[0]}
-                          </CBadge>
-                        </CTableDataCell>
-                        <CTableDataCell>
-                          {post.user?.first_name} {post.user?.last_name}
-                        </CTableDataCell>
-                        <CTableDataCell>{formatDateTime(post.created_at)}</CTableDataCell>
-                        <CTableDataCell>
-                          <div className="d-flex">
-                            <CButton
-                              color="primary"
-                              size="sm"
-                              className="me-2"
-                              onClick={() => handleEdit(post)}
-                            >
-                              <CIcon icon={cilPencil} className="text-white" />
-                            </CButton>
-                            <CButton
-                              color="danger"
-                              size="sm"
-                              className="me-2"
-                              onClick={() => handleDeleteClick(post)}
-                            >
-                              <CIcon icon={cilTrash} className="text-white" />
-                            </CButton>
-                            <CButton
-                              color="info"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedPost(post)
-                                setInfoModal(true)
-                              }}
-                            >
-                              <CIcon icon={cilInfo} className="text-white" />
-                            </CButton>
-                            {['Admin', 'Community_Leader'].includes(userRole) &&
-                              post.status == 'pending_approval' && (
+                    {posts.map((post) => {
+                      const postUserId = post.user_id
+                      const isOwnPost = postUserId === userId
+                      let canEdit = isOwnPost
+                      let canDelete = isOwnPost
+                      let canApprove = false
+                      if (['Admin', 'Community_Leader'].includes(userRole)) {
+                        canEdit = true
+                        canDelete = true
+                        canApprove = true
+                      }
+                      return (
+                        <CTableRow key={post.id}>
+                          <CTableDataCell>{post.title}</CTableDataCell>
+                          <CTableDataCell>{getCategoryName(post)}</CTableDataCell>
+                          <CTableDataCell>
+                            <CBadge color={getNameStatus(post.status)[1]}>
+                              {getNameStatus(post.status)[0]}
+                            </CBadge>
+                          </CTableDataCell>
+                          <CTableDataCell>
+                            {post.user?.first_name} {post.user?.last_name}
+                          </CTableDataCell>
+                          <CTableDataCell>{formatDateTime(post.created_at)}</CTableDataCell>
+                          <CTableDataCell>
+                            <div className="d-flex">
+                              <CButton
+                                color="primary"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleEdit(post)}
+                                disabled={!canEdit}
+                              >
+                                <CIcon icon={cilPencil} className="text-white" />
+                              </CButton>
+                              <CButton
+                                color="danger"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleDeleteClick(post)}
+                                disabled={!canDelete}
+                              >
+                                <CIcon icon={cilTrash} className="text-white" />
+                              </CButton>
+                              <CButton
+                                color="info"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPost(post)
+                                  setInfoModal(true)
+                                }}
+                              >
+                                <CIcon icon={cilInfo} className="text-white" />
+                              </CButton>
+                              {canApprove && post.status === 'pending_approval' && (
                                 <CButton
                                   color="success"
                                   size="sm"
@@ -511,10 +512,11 @@ const Posts = () => {
                                   <CIcon icon={cilCheck} style={{ color: 'white' }} />
                                 </CButton>
                               )}
-                          </div>
-                        </CTableDataCell>
-                      </CTableRow>
-                    ))}
+                            </div>
+                          </CTableDataCell>
+                        </CTableRow>
+                      )
+                    })}
                   </CTableBody>
                 </CTable>
               )}
