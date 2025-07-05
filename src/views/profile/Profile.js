@@ -102,20 +102,13 @@ const Profile = () => {
         formData.append('image', imageFile)
       }
       const response = await profileApi.editProfile(formData)
-
-      const updatedUserInfo = {
-        ...userInfo,
-        ...editInfo,
-        url_image: response.data.url_image || userInfo.url_image,
-      }
-
-      setUserInfo(updatedUserInfo)
-      localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
+      const { data } = await profileApi.getProfile()
+      setUserInfo(data)
+      localStorage.setItem('userInfo', JSON.stringify(data))
       window.dispatchEvent(new Event('userInfoUpdated'))
 
       setShowEditModal(false)
-      setSuccessMessage('Perfil editado correctamente')
-      setShowSuccess(true)
+      setAlertData({ response: response.data, type: 'success' }) // Ahora sí funciona esto
       setImageFile(null)
       setImagePreview(null)
     } catch ({ response }) {

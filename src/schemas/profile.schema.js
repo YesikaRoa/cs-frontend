@@ -10,7 +10,7 @@ const updateProfileSchema = z.object({
     .min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres')
     .max(50, 'El apellido no puede exceder 50 caracteres'),
   phone: z.string().max(20, 'El teléfono no puede tener más de 15 caracteres').optional(),
-  email: z.string().email('El correo debe ser válido'),
+  email: z.string().email('El correo debe ser válido (no se permiten caracteres especiales como "Ñ" o acentos)'),
 })
 
 const changePasswordSchema = z.object({
