@@ -51,6 +51,7 @@ const Users = () => {
   const [newUser, setNewUser] = useState({
     first_name: '',
     last_name: '',
+    dni: '',
     phone: '',
     email: '',
     password: '',
@@ -104,6 +105,7 @@ const Users = () => {
       setNewUser({
         first_name: '',
         last_name: '',
+        dni: '',
         phone: '',
         email: '',
         password: '',
@@ -152,6 +154,8 @@ const Users = () => {
 
   const handleSaveEdit = async () => {
     // Solo usa la validación de Zod
+    console.log('Datos a enviar:', userToEdit); // Verifica que dni esté presente
+    console.log('userToEdit.dni:', userToEdit.dni)
     const result = updateUserSchema.omit({ password: true }).safeParse(userToEdit)
     if (!result.success) {
       const errors = {}
@@ -222,6 +226,7 @@ const Users = () => {
     const data = users.map((user) => ({
       Nombre: user.first_name,
       Apellido: user.last_name,
+      Cedula: user.dni,
       Teléfono: user.phone,
       Email: user.email,
       Comunidad:
@@ -341,6 +346,9 @@ const Users = () => {
                 <strong>Correo Electrónico:</strong> {selectedUser.email}
               </li>
               <li>
+                <strong>Cedula:</strong> {selectedUser.dni || 'No disponible'}
+              </li>
+              <li>
                 <strong>Comunidad:</strong>{' '}
                 {communities.find(
                   (c) => c.id === (selectedUser.community_id || selectedUser.community?.id),
@@ -395,7 +403,7 @@ const Users = () => {
             setImagePreview(null)
           }}
         >
-          <CModalTitle>Añadir nuevo usuario</CModalTitle>
+        <CModalTitle>Añadir nuevo usuario</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CForm>
@@ -416,6 +424,15 @@ const Users = () => {
               className="mb-2"
               invalid={!!formErrors.last_name}
               feedback={formErrors.last_name}
+            />
+            <CFormInput
+              label="Cedula de Identidad"
+              name="dni"
+              value={newUser.dni}
+              onChange={handleInputChange}
+              className="mb-2"
+              invalid={!!formErrors.dni}
+              feedback={formErrors.dni}
             />
             <CFormInput
               label="Teléfono"
@@ -539,6 +556,14 @@ const Users = () => {
                 className="mb-2"
                 invalid={!!formErrors.last_name}
                 feedback={formErrors.last_name}
+              />
+              <CFormInput
+                label="Cedula"
+                value={userToEdit.dni}
+                onChange={(e) => setUserToEdit({ ...userToEdit, dni: e.target.value })}
+                className="mb-2"
+                invalid={!!formErrors.dni}
+                feedback={formErrors.dni}
               />
               <CFormInput
                 label="Teléfono"

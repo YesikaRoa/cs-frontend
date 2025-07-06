@@ -20,7 +20,7 @@ import AlertMessage from '../../components/ui/AlertMessage'
 import profileApi from '../../api/endpoints/profileApi'
 import { getRoleNameByKey } from '../../utils/roles'
 import { updateProfileSchema, changePasswordSchema } from '../../schemas/profile.schema'
-import './profile.css'
+import './Profile.css'
 import CIcon from '@coreui/icons-react'
 import { cilHttps, cilPencil } from '@coreui/icons'
 import defaultProfile from '../../assets/images/image-default.png'
@@ -201,6 +201,9 @@ const Profile = () => {
                     <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
                   </div>
                   <div className="mb-2">
+                    <strong>Cedula:</strong> {userInfo?.dni || 'No disponible'}
+                  </div>
+                  <div className="mb-2">
                     <strong>Email:</strong> {userInfo?.email}
                   </div>
                   <div className="mb-2">
@@ -300,6 +303,14 @@ const Profile = () => {
               className="mb-2"
               invalid={!!formErrors.last_name}
               feedback={formErrors.last_name}
+            />
+            <CFormInput
+              label="Cedula"
+              value={editInfo.dni || ''}
+              onChange={(e) => setEditInfo({ ...editInfo, dni: e.target.value })}
+              className="mb-2"
+              invalid={!!formErrors.dni}
+              feedback={formErrors.dni}
             />
             <CFormInput
               label="Teléfono"
