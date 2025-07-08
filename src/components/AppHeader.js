@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 
@@ -17,6 +17,7 @@ import CIcon from '@coreui/icons-react'
 import { cilContrast, cilMenu, cilMoon, cilSun, cilExitToApp } from '@coreui/icons'
 
 import { AppBreadcrumb } from './index'
+import defaultProfile from '../assets/images/image-default.png'
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -26,10 +27,22 @@ const AppHeader = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
+  const [userInfo, setUserInfo] = useState(() =>
+    JSON.parse(localStorage.getItem('userInfo') || '{}'),
+  )
+
   const handleLogout = () => {
     localStorage.removeItem('authToken')
     navigate('/login')
   }
+
+  useEffect(() => {
+    const handleUserInfoUpdate = () => {
+      setUserInfo(JSON.parse(localStorage.getItem('userInfo') || '{}'))
+    }
+    window.addEventListener('userInfoUpdated', handleUserInfoUpdate)
+    return () => window.removeEventListener('userInfoUpdated', handleUserInfoUpdate)
+  }, [])
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
@@ -40,17 +53,37 @@ const AppHeader = () => {
 
   return (
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
-      <CContainer className="border-bottom px-4" fluid>
+      <CContainer className="border-bottom px-4 d-flex align-items-center" fluid>
         <CHeaderToggler
           onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
           style={{ marginInlineStart: '-14px' }}
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
-        <CHeaderNav>
+
+        <div className="d-flex align-items-center ms-2 me-auto">
+          <img
+            src={userInfo?.url_image || defaultProfile}
+            alt="avatar"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              marginRight: 10,
+              border: '2px solid #eee',
+            }}
+          />
+          <span style={{ fontWeight: 500 }}>
+            ¡Bienvenido {userInfo?.first_name} {userInfo?.last_name}!
+          </span>
+        </div>
+
+        <CHeaderNav className="align-items-center">
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
+
           <CDropdown variant="nav-item" placement="bottom-end">
             <CDropdownToggle caret={false}>
               {colorMode === 'dark' ? (
@@ -91,18 +124,17 @@ const AppHeader = () => {
               </CDropdownItem>
             </CDropdownMenu>
           </CDropdown>
+
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
-          <CIcon
-            onClick={handleLogout}
-            style={{ marginTop: '10px', marginLeft: '10px' }}
-            icon={cilExitToApp}
-            size="lg"
-            className="cursor-pointer"
-          />
+
+          <div className="d-flex align-items-center mx-2">
+            <CIcon icon={cilExitToApp} size="lg" onClick={handleLogout} />
+          </div>
         </CHeaderNav>
       </CContainer>
+
       <CContainer className="px-4" fluid>
         <AppBreadcrumb />
       </CContainer>

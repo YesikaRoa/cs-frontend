@@ -11,49 +11,38 @@ import {
   CForm,
   CFormInput,
   CModalTitle,
+  CContainer,
+  CRow,
+  CCol,
 } from '@coreui/react'
 import AlertMessage from '../../components/ui/AlertMessage'
 
 import profileApi from '../../api/endpoints/profileApi'
 import { getRoleNameByKey } from '../../utils/roles'
-import { z } from 'zod'
-
-const updateProfileSchema = z.object({
-  first_name: z.string()
-    .min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres')
-    .max(50, 'El nombre no puede exceder 50 caracteres'),
-  last_name: z.string()
-    .min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres')
-    .max(50, 'El apellido no puede exceder 50 caracteres'),
-  phone: z.string()
-    .max(20, 'El teléfono no puede tener más de 15 caracteres')
-    .optional(),
-  email: z.string()
-    .email('El correo debe ser válido'),
-})
-
-const changePasswordSchema = z.object({
-  currentPassword: z.string()
-    .min(6, 'La contraseña actual es obligatoria y debe tener al menos 6 caracteres'),
-  newPassword: z.string()
-    .min(6, 'La nueva contraseña debe tener al menos 6 caracteres'),
-  confirmNewPassword: z.string()
-    .min(6, 'La confirmación debe tener al menos 6 caracteres'),
-})
+import { updateProfileSchema, changePasswordSchema } from '../../schemas/profile.schema'
+import './profile.css'
+import CIcon from '@coreui/icons-react'
+import { cilHttps, cilPencil } from '@coreui/icons'
+import defaultProfile from '../../assets/images/image-default.png'
 
 const Profile = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [userInfo, setUserInfo] = useState({})
   const [editInfo, setEditInfo] = useState({})
-  const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' })
+  const [password, setPassword] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  })
   const [formErrors, setFormErrors] = useState({})
   const [alertData, setAlertData] = useState(null)
-  const [showSuccess, setShowSuccess] = useState(false)
   const [loadingUser, setLoadingUser] = useState(true)
   const [showWarning, setShowWarning] = useState(false)
   const [showWrongPassword, setShowWrongPassword] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
 
   const handleChangePassword = async () => {
     const result = changePasswordSchema.safeParse(password)
@@ -78,7 +67,6 @@ const Profile = () => {
       setShowPasswordModal(false)
       setPassword({ currentPassword: '', newPassword: '', confirmNewPassword: '' })
       setSuccessMessage('Contraseña actualizada correctamente')
-      setShowSuccess(true)
     } catch (error) {
       if (
         error?.response?.status === 401 ||
@@ -106,25 +94,35 @@ const Profile = () => {
     }
     setFormErrors({})
     try {
-      const payload = {
-        first_name: editInfo.first_name,
-        last_name: editInfo.last_name,
-        email: editInfo.email,
-        phone: editInfo.phone,
+      const formData = new FormData()
+      Object.entries(editInfo).forEach(([key, value]) => {
+        formData.append(key, value)
+      })
+      if (imageFile) {
+        formData.append('image', imageFile)
       }
-      const response = await profileApi.editProfile(payload)
-      setUserInfo((prev) => ({
-        ...prev,
-        first_name: editInfo.first_name,
-        last_name: editInfo.last_name,
-        email: editInfo.email,
-        phone: editInfo.phone,
-      }))
+      const response = await profileApi.editProfile(formData)
+      const { data } = await profileApi.getProfile()
+      setUserInfo(data)
+      localStorage.setItem('userInfo', JSON.stringify(data))
+      window.dispatchEvent(new Event('userInfoUpdated'))
+
       setShowEditModal(false)
-      setSuccessMessage('Perfil editado correctamente')
-      setShowSuccess(true)
+      setAlertData({ response: response.data, type: 'success' }) // Ahora sí funciona esto
+      setImageFile(null)
+      setImagePreview(null)
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
+    }
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    setImageFile(file)
+    if (file) {
+      setImagePreview(URL.createObjectURL(file))
+    } else {
+      setImagePreview(null)
     }
   }
 
@@ -132,10 +130,23 @@ const Profile = () => {
     profileApi
       .getProfile()
       .then((response) => {
-        setUserInfo(response.data)
+        // Esto es para obtener la imagen del localstorage
+        const userInfoLocal = localStorage.getItem('userInfo')
+        let url_image = null
+        if (userInfoLocal) {
+          const parsed = JSON.parse(userInfoLocal)
+          url_image = parsed.url_image
+        }
+        setUserInfo({
+          ...response.data,
+          url_image: url_image || defaultProfile,
+        })
       })
-      .catch(({ response }) => {
-        setAlertData({ response: response.data, type: 'danger' })
+      .catch(() => {
+        const userInfoLocal = localStorage.getItem('userInfo')
+        if (userInfoLocal) {
+          setUserInfo(JSON.parse(userInfoLocal))
+        }
       })
       .finally(() => setLoadingUser(false))
   }, [])
@@ -154,55 +165,73 @@ const Profile = () => {
   return (
     <div className="d-flex justify-content-center align-items-center flex-column">
       {successMessage && (
-        <div className="alert alert-success text-center w-100" role="alert" style={{ maxWidth: 600 }}>
+        <div
+          className="alert alert-success text-center w-100"
+          role="alert"
+          style={{ maxWidth: 600 }}
+        >
           {successMessage}
         </div>
       )}
-      <CCard style={{ width: '60%', maxWidth: '800px' }}>
-        <CCardHeader>
-          <h5>Información Personal</h5>
-        </CCardHeader>
-        <CCardBody>
-          <div className="mb-3">
-            <strong>Nombre:</strong> {userInfo?.first_name}
-          </div>
-          <div className="mb-3">
-            <strong>Apellido:</strong> {userInfo?.last_name}
-          </div>
-          <div className="mb-3">
-            <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
-          </div>
-          <div className="mb-3">
-            <strong>Email:</strong> {userInfo?.email}
-          </div>
-          <div className="mb-3">
-            <strong>Dirección:</strong> {userInfo?.community?.address || 'No disponible'}
-          </div>
-          <div className="mb-3">
-            <strong>Comunidad:</strong> {userInfo?.community?.name}
-          </div>
-          <div className="mb-3">
-            <strong>Rol:</strong> {getRoleNameByKey(userInfo?.role?.name)}
-          </div>
-          <div className="d-flex justify-content-between">
-            <CButton
-              color="primary"
-              onClick={openEditModal}
-              disabled={loadingUser}
-            >
-              Editar Información
-            </CButton>
-            <CButton
-              color="info"
-              className="text-white"
-              onClick={() => setShowPasswordModal(true)}
-              disabled={loadingUser}
-            >
-              Cambiar Contraseña
-            </CButton>
-          </div>
-        </CCardBody>
-      </CCard>
+      <CContainer>
+        <CRow className="justify-content-center component-space">
+          <CCol xs={12} md={6}>
+            <CCard>
+              <CCardHeader>
+                <h5 className="text-center w-100">Información Personal</h5>
+              </CCardHeader>
+              <CCardBody>
+                <div className="d-flex justify-content-center mb-4">
+                  <div className="profile-image-circle">
+                    <img
+                      src={userInfo?.url_image || defaultProfile}
+                      alt="Imagen de perfil"
+                      className="profile-image-inside-circle"
+                    />
+                  </div>
+                </div>
+                <div className="text-center mb-4">
+                  <div className="mb-2">
+                    <strong>Nombre:</strong> {userInfo?.first_name}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Apellido:</strong> {userInfo?.last_name}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Cédula:</strong> {userInfo?.dni || 'No disponible'}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Email:</strong> {userInfo?.email}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Comunidad:</strong> {userInfo?.community?.name}
+                  </div>
+                  <div className="mb-2">
+                    <strong>Rol:</strong> {getRoleNameByKey(userInfo?.role?.name)}
+                  </div>
+                </div>
+                <div className="d-flex justify-content-center gap-3">
+                  <CButton color="primary" onClick={openEditModal} disabled={loadingUser}>
+                    <CIcon icon={cilPencil} /> Editar Información
+                  </CButton>
+                  <CButton
+                    color="info"
+                    className="text-white"
+                    onClick={() => setShowPasswordModal(true)}
+                    disabled={loadingUser}
+                  >
+                    <CIcon icon={cilHttps} className="me-2" />
+                    Cambiar Contraseña
+                  </CButton>
+                </div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow>
+      </CContainer>
 
       <CModal visible={showPasswordModal} onClose={() => setShowPasswordModal(false)}>
         <CModalHeader>Cambiar Contraseña</CModalHeader>
@@ -247,7 +276,15 @@ const Profile = () => {
         </CModalFooter>
       </CModal>
 
-      <CModal visible={showEditModal} onClose={() => setShowEditModal(false)}>
+      <CModal
+        visible={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setFormErrors({})
+          setImageFile(null)
+          setImagePreview(null)
+        }}
+      >
         <CModalHeader>Editar Información Personal</CModalHeader>
         <CModalBody>
           <CForm>
@@ -268,6 +305,14 @@ const Profile = () => {
               feedback={formErrors.last_name}
             />
             <CFormInput
+              label="Cédula"
+              value={editInfo.dni || ''}
+              onChange={(e) => setEditInfo({ ...editInfo, dni: e.target.value })}
+              className="mb-2"
+              invalid={!!formErrors.dni}
+              feedback={formErrors.dni}
+            />
+            <CFormInput
               label="Teléfono"
               value={editInfo.phone || ''}
               onChange={(e) => setEditInfo({ ...editInfo, phone: e.target.value })}
@@ -283,6 +328,23 @@ const Profile = () => {
               invalid={!!formErrors.email}
               feedback={formErrors.email}
             />
+            <CFormInput
+              type="file"
+              label="Imagen"
+              name="url_image"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="mb-2"
+            />
+            {(imagePreview || userInfo?.url_image) && (
+              <div className="mb-3 user-image-container">
+                <img
+                  src={imagePreview || userInfo.url_image}
+                  alt="preview"
+                  className="preview-image"
+                />
+              </div>
+            )}
           </CForm>
         </CModalBody>
         <CModalFooter>
@@ -305,9 +367,7 @@ const Profile = () => {
         <CModalHeader>
           <CModalTitle>Contraseña incorrecta</CModalTitle>
         </CModalHeader>
-        <CModalBody>
-          La contraseña ingresada es incorrecta
-        </CModalBody>
+        <CModalBody>La contraseña ingresada es incorrecta</CModalBody>
         <CModalFooter>
           <CButton color="primary" onClick={() => setShowWrongPassword(false)}>
             Aceptar
