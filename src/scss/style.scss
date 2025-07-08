@@ -111,6 +111,17 @@ html {
   color: var(--sidebar-active-color) !important;
 }
 
+.sidebar .nav-icon {
+  color: var(--sidebar-color) !important;
+  transition: color 0.2s;
+}
+
+.sidebar .nav-link.active .nav-icon,
+.sidebar .nav-link:focus .nav-icon,
+.sidebar .nav-link:hover .nav-icon {
+  color: #22223b !important;
+}
+
 @include color-mode(dark) {
   body {
     background-color: var(--cui-dark-bg-subtle);
