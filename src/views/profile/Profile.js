@@ -201,6 +201,9 @@ const Profile = () => {
                     <strong>Teléfono:</strong> {userInfo?.phone || 'No disponible'}
                   </div>
                   <div className="mb-2">
+                    <strong>Cédula:</strong> {userInfo?.dni || 'No disponible'}
+                  </div>
+                  <div className="mb-2">
                     <strong>Email:</strong> {userInfo?.email}
                   </div>
                   <div className="mb-2">
@@ -300,6 +303,14 @@ const Profile = () => {
               className="mb-2"
               invalid={!!formErrors.last_name}
               feedback={formErrors.last_name}
+            />
+            <CFormInput
+              label="Cédula"
+              value={editInfo.dni || ''}
+              onChange={(e) => setEditInfo({ ...editInfo, dni: e.target.value })}
+              className="mb-2"
+              invalid={!!formErrors.dni}
+              feedback={formErrors.dni}
             />
             <CFormInput
               label="Teléfono"

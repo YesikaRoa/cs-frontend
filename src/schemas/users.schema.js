@@ -7,6 +7,7 @@ const venezuelaPhoneRegex = /^(?:(?:\+58|0058))?(?:0)?(212|234|235|238|239|240|2
 export const createUserSchema = z.object({
   first_name: z.string().min(3, 'El nombre es obligatorio y debe tener al menos 3 caracteres'),
   last_name: z.string().min(3, 'El apellido es obligatorio y debe tener al menos 3 caracteres'),
+  dni: z.string().min(7, 'La cedula debe tener al menos 7 caracteres').max(10, 'La cedula no debe tener más de 10 caracteres'),
   phone: z.string()
     .regex(venezuelaPhoneRegex, 'Debe ser un número telefónico válido (ej: 02761234567, 04161234567)'),
   email: z.string().email('El correo debe ser válido (no se permiten caracteres especiales como "Ñ" o acentos)'),

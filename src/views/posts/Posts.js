@@ -33,6 +33,7 @@ import postApi from '../../api/endpoints/postApi'
 import formatDateTime from '../../utils/formatDateTime'
 import AlertMessage from '../../components/ui/AlertMessage'
 import { createPostSchema } from '../../schemas/posts.schema'
+import './posts.css'
 
 const initialForm = {
   title: '',
@@ -248,6 +249,8 @@ const Posts = () => {
           setIsEdit(false)
           setEditId(null)
           setFormErrors({})
+          setImagePreview(null)
+          setImageFile(null)
         }}
         aria-labelledby="OptionalSizesExample1"
       >
@@ -322,15 +325,10 @@ const Posts = () => {
                   <h3>Subir Imagen</h3>
                   <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
                   <CFormInput type="file" id="image" accept="image/*" onChange={handleChange} />
-
                   {imagePreview && (
-                    <div style={{ marginTop: 10 }}>
-                      <img
-                        src={imagePreview}
-                        alt="preview"
-                        style={{ maxWidth: 350, maxHeight: 350, borderRadius: 8 }}
-                      />
-                    </div>
+                  <div className="post-image-container">
+                    <img src={imagePreview} alt="preview" className="preview-image" />
+                  </div>
                   )}
                 </CCardBody>
               </CCard>
@@ -383,13 +381,16 @@ const Posts = () => {
                 {selectedPost.user?.last_name} <br />
                 <strong>Comunidad:</strong> {selectedPost.community?.name} <br />
                 <strong>Categoría:</strong> {getCategoryName(selectedPost)} <br />
+                <strong>Imagen de la publicación:</strong>
               </ul>
               {selectedPost.images && selectedPost.images.length > 0 && (
+                <div className="post-image-container">
                 <img
                   src={selectedPost.images?.[0]?.url}
                   alt="Imagen de la publicación"
-                  style={{ maxWidth: '100%', borderRadius: 8, margin: 'auto', display: 'flex' }}
+                  className='preview-image'
                 />
+                </div>
               )}
             </div>
           )}

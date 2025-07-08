@@ -1,4 +1,4 @@
-.user-image-container {
+.post-image-container {
   margin-top: 12px;
   width: 100%;
   max-width: 100%;
@@ -7,7 +7,7 @@
   align-items: center;
 }
 
-.user-image {
+.post-image {
   display: block;
   margin-left: auto;
   margin-right: auto;

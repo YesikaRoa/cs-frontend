@@ -26,7 +26,9 @@ import communityApi from '../../api/endpoints/communityApi'
 import { createUserSchema, updateUserSchema } from '../../schemas/users.schema.js'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import './Users.css'
+import './users.css'
+import { getUserInfoFromToken } from '../../utils/auth'
+const { id: userId } = getUserInfoFromToken()
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -51,6 +53,7 @@ const Users = () => {
   const [newUser, setNewUser] = useState({
     first_name: '',
     last_name: '',
+    dni: '',
     phone: '',
     email: '',
     password: '',
@@ -77,7 +80,6 @@ const Users = () => {
   }
 
   const handleAddUser = async () => {
-    // Esto es para validar con zod
     const result = createUserSchema.safeParse(newUser)
     if (!result.success) {
       const errors = {}
@@ -104,6 +106,7 @@ const Users = () => {
       setNewUser({
         first_name: '',
         last_name: '',
+        dni: '',
         phone: '',
         email: '',
         password: '',
@@ -115,7 +118,7 @@ const Users = () => {
       setImagePreview(null)
       setAddModal(false)
       fetchData()
-      setAlertData({ response: data, type: 'success' }) // ALERTA DE SUCCESS
+      setAlertData({ response: data, type: 'success' })
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -151,7 +154,9 @@ const Users = () => {
   }
 
   const handleSaveEdit = async () => {
-    // Solo usa la validación de Zod
+    delete userToEdit.url_image
+    delete userToEdit.community
+    delete userToEdit.role
     const result = updateUserSchema.omit({ password: true }).safeParse(userToEdit)
     if (!result.success) {
       const errors = {}
@@ -163,39 +168,23 @@ const Users = () => {
     }
     setFormErrors({})
     try {
-      const formData = new FormData()
-      Object.entries(userToEdit).forEach(([key, value]) => {
-        if (key === 'community_id' || key === 'rol_id') {
-          formData.append(key, Number(value))
-        } else {
-          formData.append(key, value)
-        }
-      })
-      if (imageFile) {
-        formData.append('image', imageFile)
-      }
-      const { data } = await userApi.updateUser(userToEdit.id, formData)
-
-      // --- ACTUALIZA LOCALSTORAGE SI ES EL USUARIO LOGGEADO ---
+      const { data } = await userApi.updateUser(userToEdit.id, userToEdit)
       const userInfoLocal = JSON.parse(localStorage.getItem('userInfo') || '{}')
-      if (String(userInfoLocal.id) === String(userToEdit.id)) {
+      if (userId === userToEdit.id) {
         const updatedUserInfo = {
-          ...userInfoLocal, // Mantén los datos actuales
-          ...userToEdit, // Aplica los cambios editados (nombre, email, etc.)
-          url_image: data.data?.url_image || userInfoLocal.url_image, // Actualiza imagen si viene nueva
+          ...userInfoLocal,
+          ...userToEdit,
         }
-
         localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
         window.dispatchEvent(new Event('userInfoUpdated'))
       }
-      // --------------------------------------------------------
 
       fetchData()
       setEditModal(false)
       setUserToEdit(null)
       setImageFile(null)
       setImagePreview(null)
-      setAlertData({ response: data, type: 'success' }) // ALERTA DE SUCCESS
+      setAlertData({ response: data, type: 'success' })
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -222,6 +211,7 @@ const Users = () => {
     const data = users.map((user) => ({
       Nombre: user.first_name,
       Apellido: user.last_name,
+      Cedula: user.dni,
       Teléfono: user.phone,
       Email: user.email,
       Comunidad:
@@ -341,6 +331,9 @@ const Users = () => {
                 <strong>Correo Electrónico:</strong> {selectedUser.email}
               </li>
               <li>
+                <strong>Cédula de identidad:</strong> {selectedUser.dni || 'No disponible'}
+              </li>
+              <li>
                 <strong>Comunidad:</strong>{' '}
                 {communities.find(
                   (c) => c.id === (selectedUser.community_id || selectedUser.community?.id),
@@ -416,6 +409,15 @@ const Users = () => {
               className="mb-2"
               invalid={!!formErrors.last_name}
               feedback={formErrors.last_name}
+            />
+            <CFormInput
+              label="Cédula de Identidad"
+              name="dni"
+              value={newUser.dni}
+              onChange={handleInputChange}
+              className="mb-2"
+              invalid={!!formErrors.dni}
+              feedback={formErrors.dni}
             />
             <CFormInput
               label="Teléfono"
@@ -539,6 +541,14 @@ const Users = () => {
                 className="mb-2"
                 invalid={!!formErrors.last_name}
                 feedback={formErrors.last_name}
+              />
+              <CFormInput
+                label="Cédula de Identidad"
+                value={userToEdit.dni}
+                onChange={(e) => setUserToEdit({ ...userToEdit, dni: e.target.value })}
+                className="mb-2"
+                invalid={!!formErrors.dni}
+                feedback={formErrors.dni}
               />
               <CFormInput
                 label="Teléfono"
