@@ -26,7 +26,7 @@ import communityApi from '../../api/endpoints/communityApi'
 import { createUserSchema, updateUserSchema } from '../../schemas/users.schema.js'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import './users.css'
+import './Users.css'
 
 const Users = () => {
   const [users, setUsers] = useState([])
