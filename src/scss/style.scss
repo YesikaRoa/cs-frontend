@@ -1,8 +1,8 @@
-@use "@coreui/coreui/scss/coreui" as * with (
-  $enable-deprecation-messages: false,
+@use '@coreui/coreui/scss/coreui' as * with (
+  $enable-deprecation-messages: false
 );
-@use "@coreui/chartjs/scss/coreui-chartjs";
-@use "vendors/simplebar";
+@use '@coreui/chartjs/scss/coreui-chartjs';
+@use 'vendors/simplebar';
 
 body {
   background-color: var(--cui-tertiary-bg);
@@ -17,7 +17,7 @@ html {
   width: 100%;
   padding-inline: var(--cui-sidebar-occupy-start, 0) var(--cui-sidebar-occupy-end, 0);
   will-change: auto;
-  @include transition(padding .15s);
+  @include transition(padding 0.15s);
 }
 
 .header > .container-fluid,
@@ -61,16 +61,23 @@ html {
   min-height: calc(3rem + 1px);
 }
 
-
 :root {
-  --sidebar-bg: #22223b; 
+  --sidebar-bg: #22223b;
+  --sidebar-bg-2: #4a4e69;
   --sidebar-color: #f2e9e4;
   --sidebar-active-bg: #f2e9e4;
   --sidebar-active-color: #22223b;
-  --sidebar-border: #22223b; 
+  --sidebar-border: #22223b;
 }
 
+.footer,
+.header > .container-fluid {
+  background-color: var(--sidebar-bg) !important;
+}
 
+.header > .container-fluid:nth-of-type(2) {
+  background-color: var(--sidebar-bg-2) !important;
+}
 
 .sidebar,
 .sidebar-header,
@@ -83,7 +90,7 @@ html {
 
 .sidebar-header,
 .sidebar-brand-full {
-  border-bottom: 1px solid #22223B;
+  border-bottom: 1px solid #22223b;
 }
 
 .sidebar,
@@ -92,11 +99,14 @@ html {
   border-right: 1px solid var(--sidebar-border);
 }
 
-.sidebar .nav-link, .sidebar .nav-link:visited {
+.sidebar .nav-link,
+.sidebar .nav-link:visited {
   color: var(--sidebar-color) !important;
 }
 
-.sidebar .nav-link.active, .sidebar .nav-link:focus, .sidebar .nav-link:hover {
+.sidebar .nav-link.active,
+.sidebar .nav-link:focus,
+.sidebar .nav-link:hover {
   background-color: var(--sidebar-active-bg) !important;
   color: var(--sidebar-active-color) !important;
 }
