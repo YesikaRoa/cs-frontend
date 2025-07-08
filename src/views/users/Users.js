@@ -27,6 +27,8 @@ import { createUserSchema, updateUserSchema } from '../../schemas/users.schema.j
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import './users.css'
+import { getUserInfoFromToken } from '../../utils/auth'
+const { id: userId } = getUserInfoFromToken()
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -78,7 +80,6 @@ const Users = () => {
   }
 
   const handleAddUser = async () => {
-    // Esto es para validar con zod
     const result = createUserSchema.safeParse(newUser)
     if (!result.success) {
       const errors = {}
@@ -117,7 +118,7 @@ const Users = () => {
       setImagePreview(null)
       setAddModal(false)
       fetchData()
-      setAlertData({ response: data, type: 'success' }) // ALERTA DE SUCCESS
+      setAlertData({ response: data, type: 'success' })
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -153,9 +154,9 @@ const Users = () => {
   }
 
   const handleSaveEdit = async () => {
-    // Solo usa la validación de Zod
-    console.log('Datos a enviar:', userToEdit) // Verifica que dni esté presente
-    console.log('userToEdit.dni:', userToEdit.dni)
+    delete userToEdit.url_image
+    delete userToEdit.community
+    delete userToEdit.role
     const result = updateUserSchema.omit({ password: true }).safeParse(userToEdit)
     if (!result.success) {
       const errors = {}
@@ -167,39 +168,23 @@ const Users = () => {
     }
     setFormErrors({})
     try {
-      const formData = new FormData()
-      Object.entries(userToEdit).forEach(([key, value]) => {
-        if (key === 'community_id' || key === 'rol_id') {
-          formData.append(key, Number(value))
-        } else {
-          formData.append(key, value)
-        }
-      })
-      if (imageFile) {
-        formData.append('image', imageFile)
-      }
-      const { data } = await userApi.updateUser(userToEdit.id, formData)
-
-      // --- ACTUALIZA LOCALSTORAGE SI ES EL USUARIO LOGGEADO ---
+      const { data } = await userApi.updateUser(userToEdit.id, userToEdit)
       const userInfoLocal = JSON.parse(localStorage.getItem('userInfo') || '{}')
-      if (String(userInfoLocal.id) === String(userToEdit.id)) {
+      if (userId === userToEdit.id) {
         const updatedUserInfo = {
-          ...userInfoLocal, // Mantén los datos actuales
-          ...userToEdit, // Aplica los cambios editados (nombre, email, etc.)
-          url_image: data.data?.url_image || userInfoLocal.url_image, // Actualiza imagen si viene nueva
+          ...userInfoLocal,
+          ...userToEdit,
         }
-
         localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
         window.dispatchEvent(new Event('userInfoUpdated'))
       }
-      // --------------------------------------------------------
 
       fetchData()
       setEditModal(false)
       setUserToEdit(null)
       setImageFile(null)
       setImagePreview(null)
-      setAlertData({ response: data, type: 'success' }) // ALERTA DE SUCCESS
+      setAlertData({ response: data, type: 'success' })
     } catch ({ response }) {
       setAlertData({ response: response.data, type: 'danger' })
     }
@@ -346,7 +331,7 @@ const Users = () => {
                 <strong>Correo Electrónico:</strong> {selectedUser.email}
               </li>
               <li>
-                <strong>Cedula:</strong> {selectedUser.dni || 'No disponible'}
+                <strong>Cédula de identidad:</strong> {selectedUser.dni || 'No disponible'}
               </li>
               <li>
                 <strong>Comunidad:</strong>{' '}
@@ -426,7 +411,7 @@ const Users = () => {
               feedback={formErrors.last_name}
             />
             <CFormInput
-              label="Cedula de Identidad"
+              label="Cédula de Identidad"
               name="dni"
               value={newUser.dni}
               onChange={handleInputChange}
@@ -558,7 +543,7 @@ const Users = () => {
                 feedback={formErrors.last_name}
               />
               <CFormInput
-                label="Cedula"
+                label="Cédula de Identidad"
                 value={userToEdit.dni}
                 onChange={(e) => setUserToEdit({ ...userToEdit, dni: e.target.value })}
                 className="mb-2"
