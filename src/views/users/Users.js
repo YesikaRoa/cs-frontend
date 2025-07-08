@@ -26,7 +26,7 @@ import communityApi from '../../api/endpoints/communityApi'
 import { createUserSchema, updateUserSchema } from '../../schemas/users.schema.js'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import './Users.css'
+import './users.css'
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -154,7 +154,7 @@ const Users = () => {
 
   const handleSaveEdit = async () => {
     // Solo usa la validación de Zod
-    console.log('Datos a enviar:', userToEdit); // Verifica que dni esté presente
+    console.log('Datos a enviar:', userToEdit) // Verifica que dni esté presente
     console.log('userToEdit.dni:', userToEdit.dni)
     const result = updateUserSchema.omit({ password: true }).safeParse(userToEdit)
     if (!result.success) {
@@ -403,7 +403,7 @@ const Users = () => {
             setImagePreview(null)
           }}
         >
-        <CModalTitle>Añadir nuevo usuario</CModalTitle>
+          <CModalTitle>Añadir nuevo usuario</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CForm>
