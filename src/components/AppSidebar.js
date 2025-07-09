@@ -12,7 +12,7 @@ import {
 
 import { AppSidebarNav } from './AppSidebarNav'
 
-import logoPanel from 'src/assets/images/logo_panel.png'
+import logoPanel from 'src/assets/images/3-fotor-20250708204943.png'
 
 // sidebar nav config
 import navigation from '../_nav'

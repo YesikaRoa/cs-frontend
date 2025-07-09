@@ -9,22 +9,20 @@ import {
   CSpinner,
 } from '@coreui/react'
 import { useEffect, useState } from 'react'
-import userApi from '../../api/endpoints/userApi'
+import leadersApi from '../../api/endpoints/leadersApi'
 
 const Leaders = () => {
   const [leadersByComunidad, setLeadersByComunidad] = useState({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    userApi.getUsers().then(res => {
+    leadersApi.getLeaders().then(res => {
       const allowedRoles = ['Community_Leader', 'Street_Leader']
       const roleMap = {
         'Community_Leader': 'Líder de comunidad',
         'Street_Leader': 'Líder de calle',
       }
-      
       const leaders = (res.data.data || []).filter(user => allowedRoles.includes(user.role?.name))
-    
       const grouped = {}
       leaders.forEach(leader => {
         const comunidad = leader.community?.name || 'Sin comunidad'

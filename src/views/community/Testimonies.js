@@ -23,7 +23,7 @@ import {
   CBadge,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilPlus, cilCheck } from '@coreui/icons'
+import { cilTrash, cilPlus, cilCheck } from '@coreui/icons'
 import testimoniesApi from '../../api/endpoints/testimoniesApi'
 import communityApi from '../../api/endpoints/communityApi'
 import AlertMessage from '../../components/ui/AlertMessage'
@@ -252,14 +252,6 @@ const Testimonies = () => {
         </CModalFooter>
       </CModal>
 
-      <CRow>
-        <CCol className="text-end mb-3">
-          <CButton color="primary" onClick={() => setVisible(true)}>
-            <CIcon icon={cilPlus} /> Agregar Testimonio
-          </CButton>
-        </CCol>
-      </CRow>
-
       <CCard>
         <CCardBody>
           <CTable striped hover responsive>
@@ -269,7 +261,7 @@ const Testimonies = () => {
                 <CTableHeaderCell>Comentario</CTableHeaderCell>
                 <CTableHeaderCell>Comunidad</CTableHeaderCell>
                 <CTableHeaderCell>Fecha de Creación</CTableHeaderCell>
-                <CTableHeaderCell>Estado</CTableHeaderCell> {/* NUEVO */}
+                <CTableHeaderCell>Estado</CTableHeaderCell> 
                 <CTableHeaderCell>Acciones</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
@@ -300,14 +292,6 @@ const Testimonies = () => {
                     </CTableDataCell>
                     <CTableDataCell>
                       <div className="d-flex">
-                        <CButton
-                          color="primary"
-                          size="sm"
-                          className="me-2"
-                          onClick={() => handleEdit(t)}
-                        >
-                          <CIcon icon={cilPencil} className="text-white" />
-                        </CButton>
                         <CButton
                           color="danger"
                           size="sm"
