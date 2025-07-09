@@ -46,8 +46,8 @@ const Users = () => {
 
   const roles = [
     { id: 1, name: 'Admin' },
-    { id: 2, name: 'Jefe de comunidad' },
-    { id: 3, name: 'Lider de calle' },
+    { id: 2, name: 'Líder de comunidad' },
+    { id: 3, name: 'Líder de calle' },
   ]
 
   const [newUser, setNewUser] = useState({
