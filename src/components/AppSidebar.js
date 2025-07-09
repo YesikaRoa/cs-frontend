@@ -15,12 +15,15 @@ import { AppSidebarNav } from './AppSidebarNav'
 import logoPanel from 'src/assets/images/logo-panel.png'
 
 // sidebar nav config
-import navigation from '../_nav'
+import getNavConfig from '../_nav'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
+
+  const navItems = getNavConfig()
+  if (!navItems) return null
 
   return (
     <CSidebar
@@ -57,7 +60,7 @@ const AppSidebar = () => {
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
         />
       </CSidebarHeader>
-      <AppSidebarNav items={navigation} />
+      <AppSidebarNav items={navItems} />
       <CSidebarFooter className="border-top d-none d-lg-flex">
         <CSidebarToggler
           onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}

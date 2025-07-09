@@ -36,10 +36,13 @@ const allNav = [
   },
 ]
 
-const { rol_name } = getUserInfoFromToken() || {};
-let _nav = allNav
-if (rol_name === 'Street_Leader') {
-  _nav = allNav.filter((item) => ['Dashboard', 'Publicaciones', 'Perfil'].includes(item.name))
+function getNavConfig() {
+  const { rol_name } = getUserInfoFromToken() || {}
+  if (!rol_name) return null
+  if (rol_name === 'Street_Leader') {
+    return allNav.filter((item) => ['Dashboard', 'Publicaciones', 'Perfil'].includes(item.name))
+  }
+  return allNav
 }
 
-export default _nav
+export default getNavConfig
