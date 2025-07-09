@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getUserInfoFromToken } from '../../utils/auth'
-const { id: userId, rol_name: userRole } = getUserInfoFromToken()
+const { id: userId, rol_name: userRole } = getUserInfoFromToken() || {}
 
 import {
   CButton,
@@ -326,9 +326,9 @@ const Posts = () => {
                   <CFormLabel htmlFor="imageUpload">Seleccione una imagen</CFormLabel>
                   <CFormInput type="file" id="image" accept="image/*" onChange={handleChange} />
                   {imagePreview && (
-                  <div className="post-image-container">
-                    <img src={imagePreview} alt="preview" className="preview-image" />
-                  </div>
+                    <div className="post-image-container">
+                      <img src={imagePreview} alt="preview" className="preview-image" />
+                    </div>
                   )}
                 </CCardBody>
               </CCard>
@@ -385,11 +385,11 @@ const Posts = () => {
               </ul>
               {selectedPost.images && selectedPost.images.length > 0 && (
                 <div className="post-image-container">
-                <img
-                  src={selectedPost.images?.[0]?.url}
-                  alt="Imagen de la publicación"
-                  className='preview-image'
-                />
+                  <img
+                    src={selectedPost.images?.[0]?.url}
+                    alt="Imagen de la publicación"
+                    className="preview-image"
+                  />
                 </div>
               )}
             </div>

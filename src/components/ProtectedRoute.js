@@ -3,7 +3,7 @@ import { getUserInfoFromToken } from '../utils/auth'
 
 const ProtectedRoute = ({ children, roles }) => {
   const isAuthenticated = localStorage.getItem('authToken') !== null
-  const { rol_name: userRole } = getUserInfoFromToken()
+  const { rol_name: userRole } = getUserInfoFromToken() || {}
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />

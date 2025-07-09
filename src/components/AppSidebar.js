@@ -12,7 +12,7 @@ import {
 
 import { AppSidebarNav } from './AppSidebarNav'
 
-import logoPanel from 'src/assets/images/logo_panel.png'
+import logoPanel from 'src/assets/images/logo-panel.png'
 
 // sidebar nav config
 import navigation from '../_nav'
@@ -40,8 +40,6 @@ const AppSidebar = () => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            width: '100%',
-            height: '100%',
           }}
         >
           <img
