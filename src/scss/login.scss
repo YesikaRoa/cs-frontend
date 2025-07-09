@@ -1,0 +1,495 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+// Variables de colores
+$primary-dark: #22223B;
+$primary-medium: #4A4E69;
+$primary-light: #F2E9E4;
+
+// Keyframes para animaciones
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+// Animaciones de fondo
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes floatSide {
+  0% {
+    transform: translateX(-100vw) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(100vw) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+@keyframes waveMove {
+  0% {
+    transform: translateX(-100%) rotate(0deg);
+  }
+  100% {
+    transform: translateX(100vw) rotate(360deg);
+  }
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(50px);
+    opacity: 0;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+// Contenedor principal
+.animated-login-container {
+  background: linear-gradient(135deg, $primary-dark 0%, $primary-medium 50%, $primary-light 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 80%, rgba($primary-light, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba($primary-medium, 0.1) 0%, transparent 50%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+}
+
+// Animaciones de fondo
+.background-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+// Formas flotantes
+.floating-shapes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  .shape {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(45deg, rgba($primary-medium, 0.3), rgba($primary-light, 0.2));
+    backdrop-filter: blur(2px);
+
+    &.shape-1 {
+      width: 80px;
+      height: 80px;
+      left: 10%;
+      animation: floatUp 15s linear infinite;
+      animation-delay: 0s;
+    }
+
+    &.shape-2 {
+      width: 120px;
+      height: 120px;
+      left: 20%;
+      animation: floatUp 18s linear infinite;
+      animation-delay: -3s;
+      border-radius: 20px;
+    }
+
+    &.shape-3 {
+      width: 60px;
+      height: 60px;
+      left: 70%;
+      animation: floatUp 12s linear infinite;
+      animation-delay: -6s;
+    }
+
+    &.shape-4 {
+      width: 100px;
+      height: 100px;
+      left: 80%;
+      animation: floatSide 20s linear infinite;
+      animation-delay: -2s;
+      border-radius: 0;
+      transform: rotate(45deg);
+    }
+
+    &.shape-5 {
+      width: 90px;
+      height: 90px;
+      left: 50%;
+      animation: floatUp 16s linear infinite;
+      animation-delay: -8s;
+      border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    }
+
+    &.shape-6 {
+      width: 70px;
+      height: 70px;
+      left: 30%;
+      animation: floatSide 14s linear infinite;
+      animation-delay: -5s;
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      border-radius: 0;
+    }
+  }
+}
+
+// Ondas animadas
+.animated-waves {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  .wave {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border: 2px solid rgba($primary-light, 0.3);
+    border-radius: 50%;
+    animation: waveMove 25s linear infinite;
+
+    &.wave-1 {
+      top: 20%;
+      animation-delay: 0s;
+    }
+
+    &.wave-2 {
+      top: 50%;
+      animation-delay: -8s;
+      width: 150px;
+      height: 150px;
+    }
+
+    &.wave-3 {
+      top: 80%;
+      animation-delay: -16s;
+      width: 100px;
+      height: 100px;
+    }
+  }
+}
+
+// Partículas
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba($primary-light, 0.6);
+    border-radius: 50%;
+    animation: particleFloat linear infinite;
+
+    @for $i from 1 through 20 {
+      &.particle-#{$i} {
+        left: random(100) * 1%;
+        animation-duration: (10 + random(10)) * 1s;
+        animation-delay: random(10) * -1s;
+        width: (2 + random(4)) * 1px;
+        height: (2 + random(4)) * 1px;
+      }
+    }
+  }
+}
+
+// Tarjeta principal
+.animated-card {
+  background: rgba($primary-light, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba($primary-light, 0.2);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px rgba($primary-dark, 0.1),
+    0 10px 20px rgba($primary-dark, 0.05);
+  animation: fadeInUp 0.8s ease-out;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 10;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+      0 30px 60px rgba($primary-dark, 0.15),
+      0 15px 30px rgba($primary-dark, 0.1);
+  }
+}
+
+// Títulos
+.animated-title {
+  color: $primary-dark;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  animation: slideInFromLeft 0.6s ease-out 0.2s both;
+  background: linear-gradient(45deg, $primary-dark, $primary-medium);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.animated-subtitle {
+  color: $primary-medium;
+  animation: slideInFromLeft 0.6s ease-out 0.4s both;
+  margin-bottom: 2rem;
+}
+
+// Grupos de input
+.animated-input-group {
+  margin-bottom: 1.5rem;
+  animation: slideInFromLeft 0.6s ease-out both;
+
+  &:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+
+  &:nth-child(4) {
+    animation-delay: 0.8s;
+  }
+
+  .form-control {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba($primary-medium, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+    color: $primary-dark;
+
+    &:focus {
+      background: rgba(255, 255, 255, 1);
+      border-color: $primary-medium;
+      box-shadow: 0 0 0 3px rgba($primary-medium, 0.1);
+      transform: translateY(-2px);
+    }
+  }
+
+  .input-group-text {
+    background: linear-gradient(45deg, $primary-medium, $primary-dark);
+    border: none;
+    border-radius: 12px 0 0 12px;
+    color: $primary-light;
+    transition: all 0.3s ease;
+  }
+
+  &:hover .input-group-text {
+    background: linear-gradient(45deg, $primary-dark, $primary-medium);
+  }
+}
+
+// Botones
+.animated-button-primary {
+  background: linear-gradient(45deg, $primary-medium, $primary-dark);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  color: $primary-light;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  animation: slideInFromLeft 0.6s ease-out 1s both;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba($primary-light, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  &:hover {
+    background: linear-gradient(45deg, $primary-dark, $primary-medium);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba($primary-dark, 0.2);
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:disabled {
+    background: linear-gradient(45deg, $primary-medium, $primary-dark);
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &.loading-button {
+    background: linear-gradient(45deg, $primary-medium, $primary-dark);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.animated-button-secondary {
+  background: transparent;
+  border: 2px solid $primary-medium;
+  border-radius: 12px;
+  color: $primary-medium;
+  padding: 10px 20px;
+  transition: all 0.3s ease;
+  animation: slideInFromLeft 0.6s ease-out 1.2s both;
+
+  &:hover {
+    background: $primary-medium;
+    color: $primary-light;
+    transform: translateY(-2px);
+  }
+}
+
+// Modal
+.animated-modal {
+  .modal-content {
+    background: rgba($primary-light, 0.98);
+    backdrop-filter: blur(15px);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba($primary-dark, 0.2);
+  }
+
+  .modal-header {
+    background: linear-gradient(45deg, $primary-medium, $primary-dark);
+    color: $primary-light;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+  }
+
+  .modal-body {
+    padding: 2rem;
+  }
+
+  .modal-footer {
+    border-top: 1px solid rgba($primary-medium, 0.1);
+    padding: 1.5rem 2rem;
+  }
+}
+
+// Efectos de transición
+.fade-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .animated-title {
+    font-size: 2rem;
+  }
+
+  .floating-shapes .shape {
+    &.shape-1, &.shape-3 {
+      width: 40px;
+      height: 40px;
+    }
+    
+    &.shape-2 {
+      width: 60px;
+      height: 60px;
+    }
+  }
+
+  .particles .particle {
+    width: 2px;
+    height: 2px;
+  }
+}
