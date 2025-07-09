@@ -162,7 +162,7 @@ const Testimonies = () => {
     const statuses = {
       published: ['Publicado', 'success'],
       pending_approval: ['Pendiente', 'warning'],
-      draft: ['Eliminado', 'secondary'], // Funcion de Joan
+      draft: ['Eliminado', 'secondary'],
     }
     return statuses[status] || ['Desconocido', 'secondary']
   }
@@ -261,7 +261,7 @@ const Testimonies = () => {
                 <CTableHeaderCell>Comentario</CTableHeaderCell>
                 <CTableHeaderCell>Comunidad</CTableHeaderCell>
                 <CTableHeaderCell>Fecha de Creación</CTableHeaderCell>
-                <CTableHeaderCell>Estado</CTableHeaderCell> 
+                <CTableHeaderCell>Estado</CTableHeaderCell>
                 <CTableHeaderCell>Acciones</CTableHeaderCell>
               </CTableRow>
             </CTableHead>

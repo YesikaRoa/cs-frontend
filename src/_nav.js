@@ -36,7 +36,7 @@ const allNav = [
   },
 ]
 
-const { rol_name } = getUserInfoFromToken()
+const { rol_name } = getUserInfoFromToken() || {};
 let _nav = allNav
 if (rol_name === 'Street_Leader') {
   _nav = allNav.filter((item) => ['Dashboard', 'Publicaciones', 'Perfil'].includes(item.name))
