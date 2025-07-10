@@ -17,7 +17,7 @@ import {
   CRow,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilEnvelopeClosed } from '@coreui/icons'
+import { cilLockLocked, cilUser, cilEnvelopeClosed, cilCheckCircle, cilWarning } from '@coreui/icons'
 import authApi from '../../api/endpoints/authApi'
 import AlertMessage from '../../components/ui/AlertMessage'
 import '../../scss/login.scss'
@@ -31,6 +31,8 @@ const Login = () => {
   const [recoverEmail, setEmailRecuperacion] = useState('')
   const [alertData, setAlertData] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [recoveryLoading, setRecoveryLoading] = useState(false)
+  const [recoverySuccess, setRecoverySuccess] = useState(false)
 
   const handleLogin = () => {
     setLoading(true)
@@ -42,14 +44,53 @@ const Login = () => {
         navigate('/dashboard')
       })
       .catch(({ response }) => {
-        setAlertData({ response: response.data, type: 'danger' })
+        const errorMessage = response?.data?.message || 'Error al iniciar sesión'
+        setAlertData({ 
+          response: { message: errorMessage }, 
+          type: 'danger' 
+        })
       })
       .finally(() => setLoading(false))
   }
 
   const handleRecoverPassword = () => {
-    alert(`Se ha enviado un enlace de recuperación a: ${recoverEmail}`)
-    setShowModal(false)
+    if (!recoverEmail) {
+      setAlertData({
+        response: { message: 'Por favor ingresa tu correo electrónico' },
+        type: 'warning'
+      })
+      return
+    }
+
+    setRecoveryLoading(true)
+    
+    authApi.recoverPassword({ email: recoverEmail.trim() })
+      .then((response) => {
+        const successMessage = response.data?.message || 
+          'Se ha enviado un enlace de recuperación a tu correo electrónico'
+        
+        setAlertData({
+          response: { message: successMessage },
+          type: 'success'
+        })
+        
+        setRecoverySuccess(true)
+        setTimeout(() => {
+          setShowModal(false)
+          setRecoverySuccess(false)
+          setEmailRecuperacion('')
+        }, 0)
+      })
+      .catch(({ response }) => {
+        const errorMessage = response?.data?.message || 
+          'Error al enviar el correo de recuperación'
+        
+        setAlertData({
+          response: { message: errorMessage },
+          type: 'danger'
+        })
+      })
+      .finally(() => setRecoveryLoading(false))
   }
 
   return (
@@ -88,7 +129,7 @@ const Login = () => {
                   <h1 className="animated-title">Iniciar Sesión</h1>
                   <p className="animated-subtitle text-body-first">Accede a tu cuenta</p>
 
-                  <CInputGroup className="animated-input-group mb-3">
+                  <CInputGroup className="animated-input-group mb-3" >
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
@@ -97,6 +138,12 @@ const Login = () => {
                       autoComplete="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      style={{
+                        color: '#212529',
+                        '::placeholder': {
+                          color: '#6c757d'
+                        }
+                      }}
                     />
                   </CInputGroup>
 
@@ -141,35 +188,54 @@ const Login = () => {
 
       <CModal
         visible={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false)
+          setRecoverySuccess(false)
+          setEmailRecuperacion('')
+        }}
         alignment="center"
         className="animated-modal"
       >
         <CModalHeader>Recuperar Contraseña</CModalHeader>
-        <CModalBody>
-          <p className="text-body-secondary">
-            Te enviaremos un correo con tu nueva contraseña para que puedas acceder de nuevo al
-            sistema
-          </p>
-          <CInputGroup className="animated-input-group mb-3">
-            <CInputGroupText>
-              <CIcon icon={cilEnvelopeClosed} />
-            </CInputGroupText>
-            <CFormInput
-              placeholder="Ingrese su email"
-              value={recoverEmail}
-              onChange={(e) => setEmailRecuperacion(e.target.value)}
-            />
-          </CInputGroup>
-        </CModalBody>
-        <CModalFooter>
-          <CButton className="animated-button-primary" onClick={handleRecoverPassword}>
-            Enviar
-          </CButton>
-          <CButton className="animated-button-secondary" onClick={() => setShowModal(false)}>
-            Cancelar
-          </CButton>
-        </CModalFooter>
+          <CModalBody>
+            {!recoverySuccess && (
+              <>
+                <p className="mb-3 text-primary">
+                  Te enviaremos un correo con tu nueva contraseña para que puedas acceder de nuevo al sistema.
+                </p>
+                <CInputGroup className="animated-input-group text-primary mb-3">
+                  <CInputGroupText>
+                    <CIcon icon={cilEnvelopeClosed} />
+                  </CInputGroupText>
+                  <CFormInput
+                    placeholder="Ingrese su email"
+                    value={recoverEmail}
+                    onChange={(e) => setEmailRecuperacion(e.target.value)}
+                  />
+                </CInputGroup>
+              </>
+            )}
+          </CModalBody>
+        {!recoverySuccess && (
+          <CModalFooter>
+            <CButton
+              className="animated-button-primary"
+              onClick={handleRecoverPassword}
+              disabled={recoveryLoading}
+            >
+              {recoveryLoading ? 'Enviando...' : 'Enviar'}
+            </CButton>
+            <CButton
+              className="animated-button-secondary"
+              onClick={() => {
+                setShowModal(false)
+                setEmailRecuperacion('')
+              }}
+            >
+              Cancelar
+            </CButton>
+          </CModalFooter>
+        )}
       </CModal>
 
       {alertData && (

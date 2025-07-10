@@ -15,7 +15,8 @@
 
 .profile-image-inside-circle {
   height: 100%;
-  object-fit: contain;
+  width: 100%;
+  object-fit: cover;
   border-radius: 50%;
   background: #f4f4f4;
   display: block;
