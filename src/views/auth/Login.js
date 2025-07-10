@@ -17,7 +17,13 @@ import {
   CRow,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilEnvelopeClosed, cilCheckCircle, cilWarning } from '@coreui/icons'
+import {
+  cilLockLocked,
+  cilUser,
+  cilEnvelopeClosed,
+  cilCheckCircle,
+  cilWarning,
+} from '@coreui/icons'
 import authApi from '../../api/endpoints/authApi'
 import AlertMessage from '../../components/ui/AlertMessage'
 import '../../scss/login.scss'
@@ -45,9 +51,9 @@ const Login = () => {
       })
       .catch(({ response }) => {
         const errorMessage = response?.data?.message || 'Error al iniciar sesión'
-        setAlertData({ 
-          response: { message: errorMessage }, 
-          type: 'danger' 
+        setAlertData({
+          response: { message: errorMessage },
+          type: 'danger',
         })
       })
       .finally(() => setLoading(false))
@@ -57,23 +63,20 @@ const Login = () => {
     if (!recoverEmail) {
       setAlertData({
         response: { message: 'Por favor ingresa tu correo electrónico' },
-        type: 'warning'
+        type: 'warning',
       })
       return
     }
 
     setRecoveryLoading(true)
-    
-    authApi.recoverPassword({ email: recoverEmail.trim() })
+
+    authApi
+      .recoverPassword({ email: recoverEmail.trim() })
       .then((response) => {
-        const successMessage = response.data?.message || 
-          'Se ha enviado un enlace de recuperación a tu correo electrónico'
-        
         setAlertData({
-          response: { message: successMessage },
-          type: 'success'
+          response: { message: response?.message },
+          type: 'success',
         })
-        
         setRecoverySuccess(true)
         setTimeout(() => {
           setShowModal(false)
@@ -82,12 +85,11 @@ const Login = () => {
         }, 0)
       })
       .catch(({ response }) => {
-        const errorMessage = response?.data?.message || 
-          'Error al enviar el correo de recuperación'
-        
+        const errorMessage = response?.data?.message || 'Error al enviar el correo de recuperación'
+
         setAlertData({
           response: { message: errorMessage },
-          type: 'danger'
+          type: 'danger',
         })
       })
       .finally(() => setRecoveryLoading(false))
@@ -129,7 +131,7 @@ const Login = () => {
                   <h1 className="animated-title">Iniciar Sesión</h1>
                   <p className="animated-subtitle text-body-first">Accede a tu cuenta</p>
 
-                  <CInputGroup className="animated-input-group mb-3" >
+                  <CInputGroup className="animated-input-group mb-3">
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
@@ -141,8 +143,8 @@ const Login = () => {
                       style={{
                         color: '#212529',
                         '::placeholder': {
-                          color: '#6c757d'
-                        }
+                          color: '#6c757d',
+                        },
                       }}
                     />
                   </CInputGroup>
@@ -197,25 +199,26 @@ const Login = () => {
         className="animated-modal"
       >
         <CModalHeader>Recuperar Contraseña</CModalHeader>
-          <CModalBody>
-            {!recoverySuccess && (
-              <>
-                <p className="mb-3 text-primary">
-                  Te enviaremos un correo con tu nueva contraseña para que puedas acceder de nuevo al sistema.
-                </p>
-                <CInputGroup className="animated-input-group text-primary mb-3">
-                  <CInputGroupText>
-                    <CIcon icon={cilEnvelopeClosed} />
-                  </CInputGroupText>
-                  <CFormInput
-                    placeholder="Ingrese su email"
-                    value={recoverEmail}
-                    onChange={(e) => setEmailRecuperacion(e.target.value)}
-                  />
-                </CInputGroup>
-              </>
-            )}
-          </CModalBody>
+        <CModalBody>
+          {!recoverySuccess && (
+            <>
+              <p className="mb-3 text-primary">
+                Te enviaremos un correo con tu nueva contraseña para que puedas acceder de nuevo al
+                sistema.
+              </p>
+              <CInputGroup className="animated-input-group text-primary mb-3">
+                <CInputGroupText>
+                  <CIcon icon={cilEnvelopeClosed} />
+                </CInputGroupText>
+                <CFormInput
+                  placeholder="Ingrese su email"
+                  value={recoverEmail}
+                  onChange={(e) => setEmailRecuperacion(e.target.value)}
+                />
+              </CInputGroup>
+            </>
+          )}
+        </CModalBody>
         {!recoverySuccess && (
           <CModalFooter>
             <CButton
