@@ -7,8 +7,8 @@ const authApi = {
     localStorage.setItem('authToken', token)
     localStorage.setItem('userInfo', JSON.stringify(data.data))
   },
-  recoverPassword: async (email) => {
-    const { data } = await axiosClient.post('/auth/recover-password', { email })
+  recoverPassword: async (emailData) => {
+    const { data } = await axiosClient.post('/auth/recover_password', emailData)
     return data
   },
 }

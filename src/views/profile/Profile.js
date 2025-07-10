@@ -157,6 +157,7 @@ const Profile = () => {
       last_name: userInfo.last_name || '',
       phone: userInfo.phone || '',
       email: userInfo.email || '',
+      dni: userInfo.dni || '',
     })
     setFormErrors({})
     setShowEditModal(true)
@@ -306,7 +307,7 @@ const Profile = () => {
             />
             <CFormInput
               label="Cédula"
-              value={editInfo.dni || ''}
+              value={editInfo?.dni || ''}
               onChange={(e) => setEditInfo({ ...editInfo, dni: e.target.value })}
               className="mb-2"
               invalid={!!formErrors.dni}
