@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const axiosClient = axios.create({
-  baseURL: 'https://libertadoress.duckdns.org/api',
+  baseURL: 'https://cs-backend-ptpj.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
