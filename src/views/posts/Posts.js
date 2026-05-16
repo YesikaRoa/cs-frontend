@@ -1,6 +1,17 @@
-import { useState, useEffect } from 'react'
+
+
 import { getUserInfoFromToken } from '../../utils/auth'
-const { id: userId, rol_name: userRole } = getUserInfoFromToken() || {}
+
+let userId = null
+let userRole = null
+
+function refreshUserInfo() {
+  const info = getUserInfoFromToken()
+  userId = info?.id || null
+  userRole = info?.rol_name || null
+}
+
+import { useState, useEffect } from 'react'
 
 import {
   CButton,
@@ -42,7 +53,11 @@ const initialForm = {
   image: '',
 }
 
+
 const Posts = () => {
+  
+  refreshUserInfo()
+
   const [visible, setVisible] = useState(false)
   const [posts, setPosts] = useState([])
   const [postsCategories, setPostsCategories] = useState([])
@@ -233,9 +248,23 @@ const Posts = () => {
     return statuses[status]
   }
 
+
   useEffect(() => {
+    
+    refreshUserInfo()
     fetchPosts()
     fetchPostsCategories()
+
+    
+    const handleFocus = () => {
+      refreshUserInfo()
+      fetchPosts()
+      fetchPostsCategories()
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   return (
